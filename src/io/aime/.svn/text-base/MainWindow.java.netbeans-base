@@ -1,0 +1,308 @@
+package io.aime;
+
+import io.aime.mvc.controller.AbstractController;
+import io.aime.mvc.controller.MainController;
+import io.aime.mvc.model.AIMEBotConsoleDocumentModel;
+import io.aime.mvc.model.AIMEBotConsoleInputDocumentModel;
+import io.aime.mvc.model.AIMEEventsTableModel;
+import io.aime.mvc.model.AbstractModel;
+import io.aime.mvc.model.MainModel;
+import io.aime.mvc.view.AIMEBotConsoleViewPanel;
+import io.aime.mvc.view.AIMEDashboardViewPanel;
+import io.aime.mvc.view.AIMEEventsViewPanel;
+import io.aime.mvc.view.AIMEJobsViewPanel;
+import io.aime.mvc.view.AbstractViewPanel;
+import io.aime.mvc.view.MainViewMenuBar;
+import io.aime.tasks.TasksHandler;
+import io.aime.tasks.init.CerebellumStartTask;
+import io.aime.util.AIMEConstants;
+import io.aime.util.Fonts;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.EventQueue;
+import java.awt.GridLayout;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import javax.swing.BorderFactory;
+import javax.swing.BoxLayout;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JSplitPane;
+import javax.swing.UIDefaults;
+import javax.swing.UIManager;
+import javax.swing.UnsupportedLookAndFeelException;
+import javax.swing.WindowConstants;
+import javax.swing.plaf.nimbus.NimbusLookAndFeel;
+import org.apache.log4j.Logger;
+
+public final class MainWindow extends AbstractFrame
+{
+
+    private static final Logger LOG = Logger.getLogger(MainWindow.class.getName());
+    public static final byte AIME_BOT_CONSOLE_VIEW_ID = 0x1;
+    public static final byte AIME_DASHBOARD_VIEW_ID = 0x2;
+    public static final byte KERNEL_LISTING_VIEW_ID = 0x3;
+    public static final byte AIME_EVENTS_VIEW_ID = 0x4;
+    private static MainWindow _INSTANCE;
+    private MainController controller;
+    private MainModel model;
+    private AIMEBotConsoleViewPanel view1;
+    private MainViewMenuBar view2;
+    private AIMEDashboardViewPanel view3;
+    private AIMEJobsViewPanel view4;
+    private AIMEEventsViewPanel view5;
+    private int executionType = 0;
+    private int heapSize = 0;
+
+    public static MainWindow getInstance()
+    {
+        return _INSTANCE;
+    }
+
+    private MainWindow()
+    {
+    }
+
+    @Override
+    protected AbstractFrame createGUI()
+    {
+        initComponents();
+        // CONTROLLERS
+        controller = new MainController();
+        // MODELS
+        model = new MainModel();
+        // CONFIGURE MODELS
+        controller.addModel(model);
+        controller.addTableModel(new AIMEEventsTableModel());
+        controller.addDocumentModel(new AIMEBotConsoleDocumentModel());
+        controller.addDocumentModel(new AIMEBotConsoleInputDocumentModel());
+        // VIEWS
+        view1 = new AIMEBotConsoleViewPanel(controller);
+        view2 = new MainViewMenuBar();
+        view3 = new AIMEDashboardViewPanel();
+        view4 = new AIMEJobsViewPanel(controller);
+        view5 = new AIMEEventsViewPanel(controller);
+        // CONFIGURE VIEWS
+        controller.addView(view1);
+        controller.addView(view3);
+        // ADD VIEWS TO THIS PANEL.
+        setJMenuBar(view2);
+        dashboardPanel.add(view3);
+        leftContainerPanel.add(view4);
+        rightContainerPanel.add(view5);
+        consolePanel.add(view1);
+        // Paint panel.
+        setLocationRelativeTo(null);
+        setVisible(true);
+        addWindowListener(new WindowAdapter()
+        {
+            @Override
+            public void windowClosing(WindowEvent e)
+            {
+                JOptionPane.showMessageDialog(
+                        MainWindow.getInstance(),
+                        "To exit the application go to FILE => EXIT.",
+                        "HELP",
+                        JOptionPane.INFORMATION_MESSAGE);
+            }
+        });
+
+        return this;
+    }
+
+    @Override
+    protected AbstractFrame configure()
+    {
+        // Launch Cerebellum proceses
+        TasksHandler.getInstance().submitInfiniteTask(CerebellumStartTask.newBuild().setExecutionType(executionType).setHeapSize(heapSize));
+
+        return this;
+    }
+
+    @Override
+    public AbstractFrame makeVisible()
+    {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    protected AbstractController getController(byte id)
+    {
+        switch (id)
+        {
+            default:
+                return controller;
+        }
+    }
+
+    @Override
+    protected AbstractModel getModel(byte id)
+    {
+        switch (id)
+        {
+            default:
+                return model;
+        }
+    }
+
+    @Override
+    protected AbstractViewPanel getView(byte id)
+    {
+        switch (id)
+        {
+            case AIME_BOT_CONSOLE_VIEW_ID:
+                return view1;
+            case AIME_DASHBOARD_VIEW_ID:
+                return view3;
+            case AIME_EVENTS_VIEW_ID:
+                return view5;
+            default:
+                return null;
+        }
+    }
+
+    public static void main(final String args[])
+    {
+        EventQueue.invokeLater(new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                try
+                {
+                    UIManager.setLookAndFeel(new NimbusLookAndFeel()
+                    {
+                        @Override
+                        public UIDefaults getDefaults()
+                        {
+                            UIDefaults ret = super.getDefaults();
+                            ret.put("nimbusBase", new Color(45, 55, 67));
+                            ret.put("control", new Color(200, 200, 200));
+                            ret.put("text", new Color(60, 60, 60));
+                            ret.put("nimbusLightBackground", new Color(225, 225, 225));
+                            ret.put("defaultFont", Fonts._INSTANCE.getDefaultBold());
+
+                            return ret;
+                        }
+                    });
+                }
+                catch (UnsupportedLookAndFeelException e)
+                {
+                    LOG.error("Impossible to set the \"L&F\" for the application. Error: " + e.toString(), e);
+                }
+
+                int executionType = 0;
+                int heapSize = 0;
+                if (args != null)
+                {
+                    executionType = ((args[0].equalsIgnoreCase("local")) ? AIMEConstants.LOCAL_EXECUTION_TYPE.getIntegerConstant() : AIMEConstants.DISTRIBUTED_EXECUTION_TYPE.getIntegerConstant());
+                    try
+                    {
+                        if (executionType == AIMEConstants.LOCAL_EXECUTION_TYPE.getIntegerConstant())
+                        {
+                            heapSize = Integer.parseInt(args[1]);
+                        }
+                    }
+                    catch (NumberFormatException e)
+                    {
+                        LOG.error("The value of the configured JVM Heap size could not be parsed. Error: " + e.toString(), e);
+                    }
+                }
+
+                _INSTANCE = (MainWindow) new MainWindow().setParams(executionType, heapSize).createGUI().configure();
+            }
+        });
+    }
+
+    /**
+     * Mutator method for setting the parameters passed on by the launching
+     * script.
+     *
+     * @param executionType The type of the execution. 1 : Local, 2 : Distributed
+     * @param heapSize      JVM's HEAP size.
+     *
+     * @return This instance.
+     */
+    private MainWindow setParams(int executionType, int heapSize)
+    {
+        this.executionType = executionType;
+        this.heapSize = heapSize;
+
+        return this;
+    }
+
+    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
+    private void initComponents()
+    {
+
+        mainSplitPane = new JSplitPane();
+        topPanel = new JPanel();
+        dashboardPanel = new JPanel();
+        lowerPanel = new JPanel();
+        leftContainerPanel = new JPanel();
+        rightContainerPanel = new JPanel();
+        bottomPanel = new JPanel();
+        consolePanel = new JPanel();
+
+        setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
+        setTitle("A.I.M.E. (Automated Indexer and [Data] Mining Engine) v0.2");
+        setMinimumSize(new Dimension(720, 520));
+        setName("Form"); // NOI18N
+        setResizable(false);
+        getContentPane().setLayout(new BoxLayout(getContentPane(), BoxLayout.LINE_AXIS));
+
+        mainSplitPane.setOrientation(JSplitPane.VERTICAL_SPLIT);
+        mainSplitPane.setResizeWeight(.5d);
+        mainSplitPane.setName("mainSplitPane"); // NOI18N
+
+        topPanel.setName("topPanel"); // NOI18N
+        topPanel.setLayout(new BorderLayout());
+
+        dashboardPanel.setBorder(BorderFactory.createEmptyBorder(2, 2, 2, 2));
+        dashboardPanel.setName("dashboardPanel"); // NOI18N
+        dashboardPanel.setLayout(new BoxLayout(dashboardPanel, BoxLayout.LINE_AXIS));
+        topPanel.add(dashboardPanel, BorderLayout.NORTH);
+
+        lowerPanel.setBorder(BorderFactory.createEmptyBorder(2, 2, 2, 2));
+        lowerPanel.setName("lowerPanel"); // NOI18N
+        lowerPanel.setLayout(new GridLayout(1, 2));
+
+        leftContainerPanel.setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4));
+        leftContainerPanel.setName("leftContainerPanel"); // NOI18N
+        leftContainerPanel.setLayout(new BoxLayout(leftContainerPanel, BoxLayout.LINE_AXIS));
+        lowerPanel.add(leftContainerPanel);
+
+        rightContainerPanel.setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4));
+        rightContainerPanel.setName("rightContainerPanel"); // NOI18N
+        rightContainerPanel.setLayout(new BoxLayout(rightContainerPanel, BoxLayout.LINE_AXIS));
+        lowerPanel.add(rightContainerPanel);
+
+        topPanel.add(lowerPanel, BorderLayout.CENTER);
+
+        mainSplitPane.setLeftComponent(topPanel);
+
+        bottomPanel.setName("bottomPanel"); // NOI18N
+        bottomPanel.setLayout(new BoxLayout(bottomPanel, BoxLayout.LINE_AXIS));
+
+        consolePanel.setName("consolePanel"); // NOI18N
+        consolePanel.setLayout(new BoxLayout(consolePanel, BoxLayout.LINE_AXIS));
+        bottomPanel.add(consolePanel);
+
+        mainSplitPane.setRightComponent(bottomPanel);
+
+        getContentPane().add(mainSplitPane);
+
+        pack();
+    }// </editor-fold>//GEN-END:initComponents
+    // Variables declaration - do not modify//GEN-BEGIN:variables
+    private JPanel bottomPanel;
+    private JPanel consolePanel;
+    private JPanel dashboardPanel;
+    private JPanel leftContainerPanel;
+    private JPanel lowerPanel;
+    private JSplitPane mainSplitPane;
+    private JPanel rightContainerPanel;
+    private JPanel topPanel;
+    // End of variables declaration//GEN-END:variables
+}

@@ -1,0 +1,4 @@
+package io.aime.mvc.model;
+
+public class KernelModel extends AbstractModel {
+}

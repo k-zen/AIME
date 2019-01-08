@@ -1,0 +1,10 @@
+package io.aime.mvc.controller;
+
+import io.aime.mvc.model.SeedsTableModel;
+import net.apkc.emma.mvc.AbstractController;
+
+public class SeedsController extends AbstractController
+{
+
+    public static final Class SEEDS_TABLE_MODEL = SeedsTableModel.class;
+}

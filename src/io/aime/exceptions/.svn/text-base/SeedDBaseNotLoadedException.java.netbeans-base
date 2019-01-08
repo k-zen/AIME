@@ -1,0 +1,26 @@
+package io.aime.exceptions;
+
+/**
+ * This exception gets thrown when the Seed DBase in memory has not been loaded
+ * yet, and we are trying to use it.
+ *
+ * @author K-Zen
+ */
+public class SeedDBaseNotLoadedException extends Exception {
+
+    public SeedDBaseNotLoadedException() {
+        super();
+    }
+
+    public SeedDBaseNotLoadedException(String message) {
+        super(message);
+    }
+
+    public SeedDBaseNotLoadedException(String message, Throwable cause) {
+        super(message, cause);
+    }
+
+    public SeedDBaseNotLoadedException(Throwable cause) {
+        super(cause);
+    }
+}

@@ -1,0 +1,83 @@
+package io.aime;
+
+// AIME
+import io.aime.mvc.controller.KernelController;
+import io.aime.mvc.model.KernelIndexServerTableModel;
+import io.aime.mvc.model.KernelSegmentServerTableModel;
+import io.aime.mvc.view.KernelViewPanel;
+
+// AWT
+import java.awt.Dimension;
+import java.awt.EventQueue;
+
+// Swing
+import javax.swing.BoxLayout;
+import javax.swing.JFrame;
+import javax.swing.WindowConstants;
+
+/**
+ * Window for interacting with the kernel.
+ *
+ * @author K-Zen
+ * @see Singleton Pattern
+ */
+public class KernelWindow extends JFrame {
+
+    private static KernelWindow _INSTANCE;
+    KernelController controller;
+    KernelViewPanel view;
+
+    static KernelWindow getInstance() {
+        return _INSTANCE;
+    }
+
+    private KernelWindow() {
+        initComponents();
+    }
+
+    private void buildWindow() {
+        controller = new KernelController();
+        controller.addTableModel(new KernelIndexServerTableModel());
+        controller.addTableModel(new KernelSegmentServerTableModel());
+        view = new KernelViewPanel(controller);
+        controller.addView(view);
+        _INSTANCE.add(view);
+        _INSTANCE.setLocationRelativeTo(MainWindow.getInstance());
+        _INSTANCE.setVisible(true);
+    }
+
+    public static void build() {
+        if (_INSTANCE != null) {
+            if (!_INSTANCE.isVisible()) {
+                _INSTANCE.setVisible(true);
+            }
+            else {
+                _INSTANCE.toFront();
+            }
+        }
+        else {
+            EventQueue.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    _INSTANCE = new KernelWindow();
+                    _INSTANCE.buildWindow();
+                }
+            });
+        }
+    }
+
+    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
+    private void initComponents() {
+
+        setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+        setTitle("Kernel Stats Window");
+        setMinimumSize(new Dimension(400, 400));
+        setName("Form"); // NOI18N
+        setPreferredSize(new Dimension(400, 400));
+        getContentPane().setLayout(new BoxLayout(getContentPane(), BoxLayout.LINE_AXIS));
+
+        pack();
+    }// </editor-fold>//GEN-END:initComponents
+    // Variables declaration - do not modify//GEN-BEGIN:variables
+    // End of variables declaration//GEN-END:variables
+}

@@ -1,0 +1,121 @@
+package io.aime.mvc.model;
+
+// AIME
+import io.aime.kernel.GeneralServerData;
+import io.aime.kernel.Kernel;
+
+// AWT
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+
+// Apache Hadoop
+import org.apache.hadoop.io.MD5Hash;
+
+// Util
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map.Entry;
+
+// Swing
+import javax.swing.JLabel;
+import javax.swing.Timer;
+import javax.swing.table.AbstractTableModel;
+
+public class IndexServerListingTableModel extends AbstractTableModel {
+
+    public final byte HOST_COLUMN_ID = 0x0;
+    public final byte TYPE_COLUMN_ID = 0x1;
+    public final byte PORT_COLUMN_ID = 0x2;
+    public final byte STATE_COLUMN_ID = 0x3;
+    private List<List<Object>> rows = new ArrayList<List<Object>>();
+    private List<String> columns = new ArrayList<String>(Arrays.asList("Host", "Type", "Port", "State"));
+
+    public IndexServerListingTableModel() {
+        super();
+        new Timer(10000, new DataListener()).start();
+    }
+
+    @Override
+    public String getColumnName(int col) {
+        return (String) columns.get(col);
+    }
+
+    @Override
+    public Class<?> getColumnClass(int columnIndex) {
+        switch (columnIndex) {
+            default:
+                return JLabel.class;
+        }
+    }
+
+    @Override
+    public int getColumnCount() {
+        return columns.size();
+    }
+
+    @Override
+    public int getRowCount() {
+        return rows.size();
+    }
+
+    @Override
+    public Object getValueAt(int rowIndex, int columnIndex) {
+        List rowList = (List) rows.get(rowIndex);
+        if (columnIndex < rowList.size()) {
+            return rowList.get(columnIndex);
+        }
+
+        return null;
+    }
+
+    @Override
+    public boolean isCellEditable(int row, int col) {
+        switch (col) {
+            default:
+                return false;
+        }
+    }
+
+    @Override
+    public void setValueAt(Object value, int row, int col) {
+        List rowList = (List) rows.get(row);
+        if (col >= rowList.size()) {
+            while (col >= rowList.size()) {
+                rowList.add(null);
+            }
+        }
+        rowList.set(col, value);
+        fireTableCellUpdated(row, col);
+    }
+
+    private int addRow(List<Object> row) {
+        if (!rows.contains(row)) {
+            rows.add(row);
+            fireTableRowsInserted(rows.size() - 1, rows.size() - 1);
+
+            return (rows.size() - 1);
+        }
+        else {
+            return -1;
+        }
+    }
+
+    class DataListener implements ActionListener {
+
+        @Override
+        public void actionPerformed(ActionEvent evt) {
+            Iterator<Entry<MD5Hash, GeneralServerData>> it = Kernel.INDEX_SERVER_FACTORY.getActiveServersList().entrySet().iterator();
+            while (it.hasNext()) {
+                Entry<MD5Hash, GeneralServerData> e = it.next();
+                GeneralServerData d = e.getValue();
+                addRow(Arrays.asList(new Object[]{
+                    d.getHost().getHostAddress(),
+                    d.resolvInstanceType(),
+                    d.getPort(),
+                    d.getStateName()}));
+            }
+        }
+    }
+}

@@ -1,0 +1,107 @@
+package io.aime;
+
+// AIME
+import io.aime.mvc.controller.AbstractController;
+import io.aime.mvc.model.AbstractModel;
+import io.aime.mvc.view.AbstractViewPanel;
+
+// AWT
+import java.awt.EventQueue;
+
+// Swing
+import javax.swing.GroupLayout;
+import javax.swing.WindowConstants;
+
+public final class DataVisualizerWindow extends AbstractFrame {
+
+    private static final DataVisualizerWindow _INSTANCE = new DataVisualizerWindow();
+    private boolean ready = false;
+
+    public static DataVisualizerWindow getInstance() {
+        return _INSTANCE;
+    }
+
+    private DataVisualizerWindow() {
+    }
+
+    @Override
+    protected AbstractFrame createGUI() {
+        initComponents();
+        // CONTROLLERS
+        // MODELS
+        // CONFIGURE MODELS
+        // VIEWS
+        // CONFIGURE VIEWS
+        // ADD VIEWS TO THIS PANEL.
+        // Paint panel.
+        setLocationRelativeTo(MainWindow.getInstance());
+        setVisible(true);
+
+        ready = true;
+
+        return this;
+    }
+
+    @Override
+    protected AbstractFrame configure() {
+        return this;
+    }
+
+    @Override
+    public AbstractFrame makeVisible() {
+        if (ready) {
+            if (!isVisible()) {
+                setVisible(true);
+            }
+            else {
+                toFront();
+            }
+        }
+        else {
+            EventQueue.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    createGUI().configure();
+                }
+            });
+        }
+
+        return this;
+    }
+
+    @Override
+    protected AbstractController getController(byte id) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    protected AbstractModel getModel(byte id) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    protected AbstractViewPanel getView(byte id) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
+    private void initComponents() {
+
+        setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+
+        GroupLayout layout = new GroupLayout(getContentPane());
+        getContentPane().setLayout(layout);
+        layout.setHorizontalGroup(
+            layout.createParallelGroup(GroupLayout.Alignment.LEADING)
+            .addGap(0, 400, Short.MAX_VALUE)
+        );
+        layout.setVerticalGroup(
+            layout.createParallelGroup(GroupLayout.Alignment.LEADING)
+            .addGap(0, 300, Short.MAX_VALUE)
+        );
+
+        pack();
+    }// </editor-fold>//GEN-END:initComponents
+    // Variables declaration - do not modify//GEN-BEGIN:variables
+    // End of variables declaration//GEN-END:variables
+}

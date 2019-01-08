@@ -1,0 +1,134 @@
+package io.aime.mvc.model;
+
+// AIME
+import io.aime.cerebellum.CerebellumDHI;
+import io.aime.kernel.Kernel;
+import io.aime.kernel.indexserver.ISStatsAgentData;
+import io.aime.util.AIMEConfiguration;
+import io.aime.util.DigitsTools;
+
+// AWT
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+
+// Util
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+// Swing
+import javax.swing.JLabel;
+import javax.swing.Timer;
+import javax.swing.table.AbstractTableModel;
+
+public final class KernelIndexServerTableModel extends AbstractTableModel {
+
+    public final byte KEY_COLUMN_ID = 0x0;
+    public final byte VALUE_COLUMN_ID = 0x1;
+    public final byte DOCS_IN_INDEX_ROW_ID = 0x0;
+    public final byte INDEX_SIZE_ROW_ID = 0x1;
+    public final byte AVG_CONN_TIME_ROW_ID = 0x2;
+    public final byte INDEXING_SPEED_ROW_ID = 0x3;
+    public final byte SEARCHES_COUNTER_ROW_ID = 0x4;
+    public final byte ERRORS_COUNTER_ROW_ID = 0x5;
+    public final byte AVG_DOC_SIZE_ROW_ID = 0x6;
+    private List<List<Object>> rows = new ArrayList<List<Object>>();
+    private List<String> columns = new ArrayList<String>(Arrays.asList("Key", "Value"));
+
+    public KernelIndexServerTableModel() {
+        super();
+        ISStatsAgentData data = (ISStatsAgentData) CerebellumDHI.getInstance().obtainLocalData(CerebellumDHI.CEREBELLUM_DATA, CerebellumDHI.IS_STATS_DATA).get();
+        addRow(Arrays.asList(new Object[]{"Documents in Index:", data.getNumberOfDocs()}));
+        addRow(Arrays.asList(new Object[]{"Index size:", DigitsTools.humanReadableByteCount(data.getIndexSize(), false)}));
+        addRow(Arrays.asList(new Object[]{"Avg. Conn. Time (ms):", Kernel.INDEX_SERVER_FACTORY.getInstanceConnectionTime()}));
+        addRow(Arrays.asList(new Object[]{"Indexing Speed (docs/sec):", data.getIndexingSpeed()}));
+        addRow(Arrays.asList(new Object[]{"Searches Counter:", data.getSearchesDoneCounter()}));
+        addRow(Arrays.asList(new Object[]{"Errors Counter:", data.getErrorsCounter()}));
+        addRow(Arrays.asList(new Object[]{"Avg. Document Size:", DigitsTools.humanReadableByteCount(data.getAvgDocSize(), false)}));
+        new Timer(new AIMEConfiguration().create().getInt("aime.kernel.table.model.refresh", 1000), new DataListener()).start();
+    }
+
+    @Override
+    public String getColumnName(int col) {
+        return (String) columns.get(col);
+    }
+
+    @Override
+    public Class<?> getColumnClass(int columnIndex) {
+        switch (columnIndex) {
+            case KEY_COLUMN_ID:
+            case VALUE_COLUMN_ID:
+                return JLabel.class;
+            default:
+                return Object.class;
+        }
+    }
+
+    @Override
+    public int getColumnCount() {
+        return columns.size();
+    }
+
+    @Override
+    public int getRowCount() {
+        return rows.size();
+    }
+
+    @Override
+    public Object getValueAt(int rowIndex, int columnIndex) {
+        List rowList = (List) rows.get(rowIndex);
+        if (columnIndex < rowList.size()) {
+            return rowList.get(columnIndex);
+        }
+
+        return null;
+    }
+
+    @Override
+    public boolean isCellEditable(int row, int col) {
+        switch (col) {
+            case KEY_COLUMN_ID:
+            case VALUE_COLUMN_ID:
+                return false;
+            default:
+                return false;
+        }
+    }
+
+    @Override
+    public void setValueAt(Object value, int row, int col) {
+        List rowList = (List) rows.get(row);
+        if (col >= rowList.size()) {
+            while (col >= rowList.size()) {
+                rowList.add(null);
+            }
+        }
+        rowList.set(col, value);
+        fireTableCellUpdated(row, col);
+    }
+
+    private void addRow(List<Object> row) {
+        rows.add(row);
+        fireTableRowsInserted(rows.size() - 1, rows.size() - 1);
+    }
+
+    private void updateCell(Object newValue, int row, int col) {
+        rows.get(row).set(col, newValue);
+        fireTableCellUpdated(row, col);
+    }
+
+    class DataListener implements ActionListener {
+
+        @Override
+        public void actionPerformed(ActionEvent evt) {
+            ISStatsAgentData data = (ISStatsAgentData) CerebellumDHI.getInstance().obtainLocalData(CerebellumDHI.CEREBELLUM_DATA, CerebellumDHI.IS_STATS_DATA).get();
+            updateCell(data.getNumberOfDocs(), DOCS_IN_INDEX_ROW_ID, VALUE_COLUMN_ID);
+            updateCell(DigitsTools.humanReadableByteCount(data.getIndexSize(), false), INDEX_SIZE_ROW_ID, VALUE_COLUMN_ID);
+            updateCell(Kernel.INDEX_SERVER_FACTORY.getInstanceConnectionTime(), AVG_CONN_TIME_ROW_ID, VALUE_COLUMN_ID);
+            updateCell(data.getIndexingSpeed(), INDEXING_SPEED_ROW_ID, VALUE_COLUMN_ID);
+            updateCell(data.getSearchesDoneCounter(), SEARCHES_COUNTER_ROW_ID, VALUE_COLUMN_ID);
+            updateCell(data.getErrorsCounter(), ERRORS_COUNTER_ROW_ID, VALUE_COLUMN_ID);
+            updateCell(DigitsTools.humanReadableByteCount(data.getAvgDocSize(), false), AVG_DOC_SIZE_ROW_ID, VALUE_COLUMN_ID);
+        }
+    }
+}

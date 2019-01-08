@@ -1,0 +1,131 @@
+package io.aime.mvc.view;
+
+// AIME
+import io.aime.cerebellum.CerebellumDHI;
+import io.aime.mvc.controller.MainController;
+import io.aime.mvc.model.AIMEBotConsoleDocumentModel;
+import io.aime.mvc.view.events.AIMEBotConsoleEvt;
+
+// AWT
+import java.awt.BorderLayout;
+import java.awt.FlowLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+
+// Beans
+import java.beans.PropertyChangeEvent;
+
+// Swing
+import javax.swing.BorderFactory;
+import javax.swing.BoxLayout;
+import javax.swing.JButton;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextPane;
+import javax.swing.Timer;
+
+public class AIMEBotConsole extends AbstractViewPanel {
+
+    public MainController controller;
+    public AIMEBotConsoleDocumentModel model;
+
+    public AIMEBotConsole(MainController controller) {
+        this.controller = controller;
+        model = (AIMEBotConsoleDocumentModel) controller.getDocumentModel(MainController.AIMEBOT_CONSOLE_MODEL);
+        initComponents();
+        consoleTextPane.setDocument(model);
+        new Timer(100, new DataListener()).start();
+    }
+
+    @Override
+    public void modelPropertyChange(PropertyChangeEvent evt) {
+        if (evt.getPropertyName().equals(MainController.BOT_CONSOLE_QUEUE_DEEP_TEXT_PROPERTY)) {
+            String newStringValue = evt.getNewValue().toString();
+
+            if (!queueSizeCountLabel.getText().equals(newStringValue)) {
+                queueSizeCountLabel.setText(newStringValue);
+            }
+        }
+    }
+
+    class DataListener implements ActionListener {
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            controller.changeQueueDeepText(String.valueOf((Integer) CerebellumDHI.getInstance().obtainLocalData(CerebellumDHI.BOT_CONSOLE, CerebellumDHI.BOT_CONSOLE_QUEUE_DEEP).get()));
+        }
+    }
+
+    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
+    private void initComponents() {
+
+        actionPanel = new JPanel();
+        startButton = new JButton();
+        stopButton = new JButton();
+        queuePanel = new JPanel();
+        queueSizeLabel = new JLabel();
+        queueSizeCountLabel = new JLabel();
+        showAllButton = new JButton();
+        consoleScrollPane = new JScrollPane();
+        consoleTextPane = new JTextPane();
+
+        setName("Form"); // NOI18N
+        setLayout(new BorderLayout());
+
+        actionPanel.setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4));
+        actionPanel.setName("actionPanel"); // NOI18N
+        actionPanel.setLayout(new BoxLayout(actionPanel, BoxLayout.LINE_AXIS));
+
+        startButton.setText("Start");
+        startButton.setName("startButton"); // NOI18N
+        startButton.addActionListener(AIMEBotConsoleEvt.getInstance().setView(this));
+        actionPanel.add(startButton);
+
+        stopButton.setText("Stop");
+        stopButton.setName("stopButton"); // NOI18N
+        stopButton.addActionListener(AIMEBotConsoleEvt.getInstance().setView(this));
+        actionPanel.add(stopButton);
+
+        queuePanel.setName("queuePanel"); // NOI18N
+        queuePanel.setLayout(new FlowLayout(FlowLayout.RIGHT));
+
+        queueSizeLabel.setText("Queue Size:");
+        queueSizeLabel.setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4));
+        queueSizeLabel.setName("queueSizeLabel"); // NOI18N
+        queuePanel.add(queueSizeLabel);
+
+        queueSizeCountLabel.setText("0");
+        queueSizeCountLabel.setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4));
+        queueSizeCountLabel.setName("queueSizeCountLabel"); // NOI18N
+        queuePanel.add(queueSizeCountLabel);
+
+        showAllButton.setText("Show All");
+        showAllButton.setName("showAllButton"); // NOI18N
+        showAllButton.addActionListener(AIMEBotConsoleEvt.getInstance().setView(this));
+        queuePanel.add(showAllButton);
+
+        actionPanel.add(queuePanel);
+
+        add(actionPanel, BorderLayout.NORTH);
+
+        consoleScrollPane.setName("consoleScrollPane"); // NOI18N
+
+        consoleTextPane.setEditable(false);
+        consoleTextPane.setName("consoleTextPane"); // NOI18N
+        consoleScrollPane.setViewportView(consoleTextPane);
+
+        add(consoleScrollPane, BorderLayout.CENTER);
+    }// </editor-fold>//GEN-END:initComponents
+    // Variables declaration - do not modify//GEN-BEGIN:variables
+    public JPanel actionPanel;
+    public JScrollPane consoleScrollPane;
+    public JTextPane consoleTextPane;
+    public JPanel queuePanel;
+    public JLabel queueSizeCountLabel;
+    public JLabel queueSizeLabel;
+    public JButton showAllButton;
+    public JButton startButton;
+    public JButton stopButton;
+    // End of variables declaration//GEN-END:variables
+}

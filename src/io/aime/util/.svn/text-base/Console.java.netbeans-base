@@ -1,0 +1,39 @@
+package io.aime.util;
+// ------------------------------
+
+// --- Util
+import java.util.Map;
+import java.util.TreeMap;
+
+public class Console {
+
+  private static final LogEventHandler EVENTS = new LogEventHandler ();
+
+  public void addNewEvent (LogEventHandler event, int eventType) {
+    Console.EVENTS.addNewEvent (event, eventType);
+  }
+
+  public String getEventTitle (String id) {
+    return Console.EVENTS.getEventTitle (id);
+  }
+
+  public String getEventDescription (String id) {
+    return Console.EVENTS.getEventDescription (id);
+  }
+
+  public long getEventDate (String id) {
+    return Console.EVENTS.getEventDate (id);
+  }
+
+  public int getEventSeverity (String id) {
+    return Console.EVENTS.getEventSeverity (id);
+  }
+
+  public Map<String, TreeMap<Integer, LogEventHandler>> getAllEventMessages () {
+    return Console.EVENTS.getAllEventMessages ();
+  }
+
+  public void resetEventTempQueue () {
+    Console.EVENTS.resetEventTempQueue ();
+  }
+}

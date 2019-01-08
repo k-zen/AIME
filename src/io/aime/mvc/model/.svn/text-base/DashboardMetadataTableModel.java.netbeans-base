@@ -1,0 +1,212 @@
+package io.aime.mvc.model;
+
+// AIME
+import io.aime.cerebellum.CerebellumDHI;
+import io.aime.util.AIMEConfiguration;
+
+// Apache Lucene
+import org.apache.lucene.document.DateTools;
+
+// AWT
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+
+// Log4j
+import org.apache.log4j.Logger;
+
+// PrettyTime
+import org.ocpsoft.pretty.time.PrettyTime;
+
+// Swing
+import javax.swing.JLabel;
+import javax.swing.Timer;
+import javax.swing.table.AbstractTableModel;
+
+// Util
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Locale;
+
+public class DashboardMetadataTableModel extends AbstractTableModel {
+
+    private static final Logger LOG = Logger.getLogger(DashboardMetadataTableModel.class.getName());
+    public final byte KEY_COLUMN_ID = 0x0;
+    public final byte VALUE_COLUMN_ID = 0x1;
+    public final byte CYCLE_COMPLETE_ROW_ID = 0x0;
+    public final byte COMPLETED_ITERATIONS_ROW_ID = 0x1;
+    public final byte LAST_FUNCTION_ROW_ID = 0x2;
+    public final byte TIME_LAST_FUNCTION_ROW_ID = 0x3;
+    public final byte EXECUTION_TYPE_ROW_ID = 0x4;
+    public final byte HEAP_SIZE_ROW_ID = 0x5;
+    private List<List<Object>> rows = new ArrayList<List<Object>>();
+    private List<String> columns = new ArrayList<String>(Arrays.asList("Key", "Value"));
+    private PrettyTime dateFormatter = new PrettyTime(new Locale("en"));
+
+    public DashboardMetadataTableModel() {
+        // Build model.
+        super();
+
+        // Create rows.
+        addRow(Arrays.asList(new Object[]{
+            "Cycle Complete:",
+            formatCellData(CerebellumDHI.getInstance().obtainLocalData(CerebellumDHI.AIME_METADATA, CerebellumDHI.AIME_IS_CYCLE_COMPLETE_DATA).get(), CYCLE_COMPLETE_ROW_ID)}));
+        addRow(Arrays.asList(new Object[]{
+            "Completed Iterations:",
+            formatCellData(CerebellumDHI.getInstance().obtainLocalData(CerebellumDHI.AIME_METADATA, CerebellumDHI.AIME_COMPLETED_ITERATIONS_DATA).get(), COMPLETED_ITERATIONS_ROW_ID)}));
+        addRow(Arrays.asList(new Object[]{
+            "Last Function:",
+            formatCellData(CerebellumDHI.getInstance().obtainLocalData(CerebellumDHI.AIME_METADATA, CerebellumDHI.AIME_LAST_FUNCTION_DATA).get(), LAST_FUNCTION_ROW_ID)}));
+        addRow(Arrays.asList(new Object[]{
+            "Time Last Function:",
+            formatCellData(CerebellumDHI.getInstance().obtainLocalData(CerebellumDHI.AIME_METADATA, CerebellumDHI.AIME_TIME_LAST_FUNCTION_DATA).get(), TIME_LAST_FUNCTION_ROW_ID)}));
+        addRow(Arrays.asList(new Object[]{
+            "Execution Type:",
+            formatCellData(CerebellumDHI.getInstance().obtainLocalData(CerebellumDHI.AIME_METADATA, CerebellumDHI.AIME_EXECUTION_TYPE_DATA).get(), EXECUTION_TYPE_ROW_ID)}));
+        addRow(Arrays.asList(new Object[]{
+            "Heap Size:",
+            formatCellData(CerebellumDHI.getInstance().obtainLocalData(CerebellumDHI.AIME_METADATA, CerebellumDHI.AIME_HEAP_SIZE_DATA).get(), HEAP_SIZE_ROW_ID)}));
+
+        // Add timer.
+        new Timer(new AIMEConfiguration().create().getInt("aime.dashboard.table.model.refresh", 1000), new DataListener()).start();
+    }
+
+    @Override
+    public String getColumnName(int col) {
+        return (String) columns.get(col);
+    }
+
+    @Override
+    public Class<?> getColumnClass(int columnIndex) {
+        switch (columnIndex) {
+            default:
+                return JLabel.class;
+        }
+    }
+
+    @Override
+    public int getColumnCount() {
+        return columns.size();
+    }
+
+    @Override
+    public int getRowCount() {
+        return rows.size();
+    }
+
+    @Override
+    public Object getValueAt(int rowIndex, int columnIndex) {
+        if (rowIndex < rows.size()) {
+            List rowList = (List) rows.get(rowIndex);
+            // If the column index is out of range, then return null.
+            if (columnIndex >= rowList.size()) {
+                return null;
+            }
+
+            return rowList.get(columnIndex);
+        }
+
+        return null;
+    }
+
+    @Override
+    public boolean isCellEditable(int row, int col) {
+        switch (col) {
+            case KEY_COLUMN_ID:
+            case VALUE_COLUMN_ID:
+                return false;
+            default:
+                return false;
+        }
+    }
+
+    @Override
+    public void setValueAt(Object value, int row, int col) {
+        List rowList = (List) rows.get(row);
+        if (col >= rowList.size()) {
+            while (col >= rowList.size()) {
+                rowList.add(null);
+            }
+        }
+        rowList.set(col, value);
+        fireTableCellUpdated(row, col);
+    }
+
+    private int addRow(List<Object> row) {
+        rows.add(row);
+        fireTableRowsInserted(rows.size() - 1, rows.size() - 1);
+
+        return (rows.size() - 1);
+    }
+
+    private int updateCell(Object newValue, int row, int col) {
+        rows.get(row).set(col, newValue);
+        fireTableCellUpdated(row, col);
+
+        return (rows.size() - 1);
+    }
+
+    /**
+     * Method for processing the cell data before adding to the table.
+     * <p>This method works both for adding and updating table cell
+     * information.</p>
+     *
+     * @param data The cell data
+     * @param row  The row where to insert the data
+     *
+     * @return The formatted cell data
+     */
+    private Object formatCellData(Object data, int row) {
+        try {
+            switch (row) {
+                case CYCLE_COMPLETE_ROW_ID:
+                    return ((Boolean) data) ? "Yes" : "No";
+                case EXECUTION_TYPE_ROW_ID:
+                    return ((Integer) data == 1) ? "Local" : "Distributed";
+                case HEAP_SIZE_ROW_ID:
+                    return ((Integer) data) + "MB";
+                case TIME_LAST_FUNCTION_ROW_ID:
+                    return ((Long) data > 0)
+                           ? dateFormatter.format(DateTools.stringToDate(DateTools.timeToString((Long) data, DateTools.Resolution.MILLISECOND)))
+                           : "Never";
+                default:
+                    return data;
+            }
+        }
+        catch (Exception e) {
+            LOG.warn("Problem parsing data for cell data. Error: " + e.toString(), e);
+            return data;
+        }
+    }
+
+    class DataListener implements ActionListener {
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            updateCell(
+                    formatCellData(CerebellumDHI.getInstance().obtainLocalData(CerebellumDHI.AIME_METADATA, CerebellumDHI.AIME_IS_CYCLE_COMPLETE_DATA).get(), CYCLE_COMPLETE_ROW_ID),
+                    CYCLE_COMPLETE_ROW_ID,
+                    VALUE_COLUMN_ID);
+            updateCell(
+                    formatCellData(CerebellumDHI.getInstance().obtainLocalData(CerebellumDHI.AIME_METADATA, CerebellumDHI.AIME_COMPLETED_ITERATIONS_DATA).get(), COMPLETED_ITERATIONS_ROW_ID),
+                    COMPLETED_ITERATIONS_ROW_ID,
+                    VALUE_COLUMN_ID);
+            updateCell(
+                    formatCellData(CerebellumDHI.getInstance().obtainLocalData(CerebellumDHI.AIME_METADATA, CerebellumDHI.AIME_LAST_FUNCTION_DATA).get(), LAST_FUNCTION_ROW_ID),
+                    LAST_FUNCTION_ROW_ID,
+                    VALUE_COLUMN_ID);
+            updateCell(
+                    formatCellData(CerebellumDHI.getInstance().obtainLocalData(CerebellumDHI.AIME_METADATA, CerebellumDHI.AIME_TIME_LAST_FUNCTION_DATA).get(), TIME_LAST_FUNCTION_ROW_ID),
+                    TIME_LAST_FUNCTION_ROW_ID,
+                    VALUE_COLUMN_ID);
+            updateCell(
+                    formatCellData(CerebellumDHI.getInstance().obtainLocalData(CerebellumDHI.AIME_METADATA, CerebellumDHI.AIME_EXECUTION_TYPE_DATA).get(), EXECUTION_TYPE_ROW_ID),
+                    EXECUTION_TYPE_ROW_ID,
+                    VALUE_COLUMN_ID);
+            updateCell(
+                    formatCellData(CerebellumDHI.getInstance().obtainLocalData(CerebellumDHI.AIME_METADATA, CerebellumDHI.AIME_HEAP_SIZE_DATA).get(), HEAP_SIZE_ROW_ID),
+                    HEAP_SIZE_ROW_ID,
+                    VALUE_COLUMN_ID);
+        }
+    }
+}

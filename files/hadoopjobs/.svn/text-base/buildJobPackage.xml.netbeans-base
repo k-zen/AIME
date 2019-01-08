@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="AIME" default="job" basedir="../..">
+    <target name="BuildJob">
+        <jar jarfile="${basedir}/files/hadoopjobs/AIME.job">
+            <zipfileset dir="${basedir}/build/classes"/>
+            <zipfileset dir="${basedir}/dist/lib" prefix="lib" includes="**/*.jar" excludes="hadoop-*.jar"/>
+            <zipfileset dir="${basedir}/files/aimefiles/aimeplugins/plugins" prefix="plugins"/>
+            <zipfileset dir="${basedir}/files/aimefiles/aimeconf/conf"
+                        excludes="core-site.xml,
+                            mapred-site.xml"/>
+        </jar>
+    </target>
+</project>

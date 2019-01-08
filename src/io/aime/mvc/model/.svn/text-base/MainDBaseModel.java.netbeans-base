@@ -1,0 +1,22 @@
+package io.aime.mvc.model;
+
+import io.aime.mvc.controller.MainController;
+import net.apkc.emma.mvc.AbstractModel;
+
+public class MainDBaseModel extends AbstractModel
+{
+
+    private String botConsoleQueueDeep;
+
+    public void setBotConsoleQueueDeep(String newDeep)
+    {
+        String oldDeep = botConsoleQueueDeep;
+        botConsoleQueueDeep = newDeep;
+        firePropertyChange(MainController.BOT_CONSOLE_QUEUE_DEEP_TEXT_PROPERTY, oldDeep, newDeep);
+    }
+
+    public String getBotConsoleQueueDeep()
+    {
+        return botConsoleQueueDeep;
+    }
+}

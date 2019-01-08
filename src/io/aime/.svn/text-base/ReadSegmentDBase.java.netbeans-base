@@ -1,0 +1,307 @@
+package io.aime;
+
+// AIME
+import io.aime.segment.SegmentReader;
+import io.aime.util.AIMEConfiguration;
+import io.aime.util.LookFeel;
+
+// Apache Hadoop
+import org.apache.hadoop.io.Text;
+
+// AWT
+import java.awt.BorderLayout;
+import java.awt.Cursor;
+import java.awt.Desktop;
+import java.awt.Dimension;
+import java.awt.EventQueue;
+import java.awt.Font;
+import java.awt.GridLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+
+// IO
+import java.io.IOException;
+
+// Util
+import java.util.ResourceBundle;
+
+// Log4j
+import org.apache.log4j.Logger;
+
+// Swing
+import javax.swing.BorderFactory;
+import javax.swing.BoxLayout;
+import javax.swing.DefaultComboBoxModel;
+import javax.swing.JButton;
+import javax.swing.JComboBox;
+import javax.swing.JEditorPane;
+import javax.swing.JFrame;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JProgressBar;
+import javax.swing.JScrollPane;
+import javax.swing.SwingUtilities;
+import javax.swing.WindowConstants;
+import javax.swing.border.TitledBorder;
+import javax.swing.event.HyperlinkEvent;
+import javax.swing.event.HyperlinkListener;
+
+public class ReadSegmentDBase extends JFrame {
+
+  private final static Logger LOG = Logger.getLogger (ReadSegmentDBase.class.getName ());
+  private static JFrame thisFrame = null;
+  private Initiator i = new Initiator ();
+  private Utilities u;
+
+  private ReadSegmentDBase () {
+    this.i.initHandlers ();
+    this.i.init ();
+  }
+
+  private class Initiator {
+
+    void initHandlers () {
+      ReadSegmentDBase.this.u = new Utilities ();
+    }
+
+    void init () {
+      ReadSegmentDBase.this.initComponents ();
+    }
+  }
+
+  private class Utilities {
+
+    Text listSegments () {
+      try {
+        return new SegmentReader ().list (new AIMEConfiguration ().create ());
+      }
+      catch (IOException ex) {
+        LOG.fatal ("Impossible to launch job SegmentDBase list. Error: " + ex.toString (), ex);
+      }
+
+      return new Text ();
+    }
+
+    Text getInfo (String url) {
+      try {
+        return new SegmentReader ().get (new Text (url), new AIMEConfiguration ().create ());
+      }
+      catch (IOException ex) {
+        LOG.fatal ("Impossible to launch job SegmentDBase get information. Error: " + ex.toString (), ex);
+      }
+
+      return new Text ();
+    }
+  }
+
+  public static void build () {
+    if (ReadSegmentDBase.thisFrame != null) {
+      if (!ReadSegmentDBase.thisFrame.isVisible ()) {
+        ReadSegmentDBase.thisFrame.setVisible (true);
+      }
+      else {
+        ReadSegmentDBase.thisFrame.toFront (); // Bring opened one to front.
+      }
+    }
+    else { // Create a new window.
+      EventQueue.invokeLater (new Runnable () {
+        @Override
+        public void run () {
+          ReadSegmentDBase.thisFrame = new ReadSegmentDBase ();
+          ReadSegmentDBase.thisFrame.setLocationRelativeTo (Main.thisFrame);
+          ReadSegmentDBase.thisFrame.setVisible (true);
+        }
+      });
+    }
+  }
+
+  private void initComponents() {//GEN-BEGIN:initComponents
+
+    containerPanel = new JPanel();
+    toolsPanel = new JPanel();
+    optionsPanel = new JPanel();
+    functionsComboBox = new JComboBox();
+    launchButton = new JButton();
+    progressPanel = new JPanel();
+    searchProgressBar = new JProgressBar();
+    resultsPanel = new JPanel();
+    resultsScrollPane = new JScrollPane();
+    resultsEditorPane = new JEditorPane();
+    FormListener formListener = new FormListener (); 
+
+    setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+    ResourceBundle bundle = ResourceBundle.getBundle ("io/aime/Bundle"); // NOI18N
+    setTitle(bundle.getString("ReadSegmentDBase.title")); // NOI18N
+    setName("Form"); // NOI18N
+    getContentPane().setLayout(new BoxLayout(getContentPane(), BoxLayout.LINE_AXIS));
+
+    containerPanel.setName("containerPanel"); // NOI18N
+    containerPanel.setPreferredSize(new Dimension(600, 300));
+    containerPanel.setLayout(new BorderLayout());
+
+    toolsPanel.setBorder(BorderFactory.createTitledBorder(LookFeel.getDefaultBorder (), bundle.getString("ReadSegmentDBase.toolsPanel.border.title"), TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION, LookFeel.getFont (true, 1))); // NOI18N
+    toolsPanel.setName("toolsPanel"); // NOI18N
+    toolsPanel.setLayout(new GridLayout(2, 1));
+
+    optionsPanel.setBorder(BorderFactory.createEmptyBorder(2, 2, 2, 2));
+    optionsPanel.setName("optionsPanel"); // NOI18N
+    optionsPanel.setLayout(new BorderLayout());
+
+    functionsComboBox.setFont(functionsComboBox.getFont().deriveFont(functionsComboBox.getFont().getStyle() | Font.BOLD, 10));
+    functionsComboBox.setModel(new DefaultComboBoxModel(new String[] { "Stats", "Get Document Information" }));
+    functionsComboBox.setName("functionsComboBox"); // NOI18N
+    optionsPanel.add(functionsComboBox, BorderLayout.CENTER);
+
+    launchButton.setFont(launchButton.getFont().deriveFont(launchButton.getFont().getStyle() | Font.BOLD, 10));
+    launchButton.setText(bundle.getString("ReadSegmentDBase.launchButton.text")); // NOI18N
+    launchButton.setName("launchButton"); // NOI18N
+    launchButton.addActionListener(formListener);
+    optionsPanel.add(launchButton, BorderLayout.EAST);
+
+    toolsPanel.add(optionsPanel);
+
+    progressPanel.setName("progressPanel"); // NOI18N
+    progressPanel.setLayout(new BoxLayout(progressPanel, BoxLayout.LINE_AXIS));
+
+    searchProgressBar.setFont(searchProgressBar.getFont().deriveFont(searchProgressBar.getFont().getStyle() | Font.BOLD, 10));
+    searchProgressBar.setName("searchProgressBar"); // NOI18N
+    progressPanel.add(searchProgressBar);
+
+    toolsPanel.add(progressPanel);
+
+    containerPanel.add(toolsPanel, BorderLayout.NORTH);
+
+    resultsPanel.setBorder(BorderFactory.createTitledBorder(LookFeel.getDefaultBorder (), bundle.getString("ReadSegmentDBase.resultsPanel.border.title"), TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION, LookFeel.getFont (true, 1))); // NOI18N
+    resultsPanel.setName("resultsPanel"); // NOI18N
+    resultsPanel.setLayout(new BoxLayout(resultsPanel, BoxLayout.LINE_AXIS));
+
+    resultsScrollPane.setBorder(BorderFactory.createEmptyBorder(1, 1, 1, 1));
+    resultsScrollPane.setAutoscrolls(true);
+    resultsScrollPane.setName("resultsScrollPane"); // NOI18N
+
+    resultsEditorPane.setEditable(false);
+    resultsEditorPane.setContentType("text/html"); // NOI18N
+    resultsEditorPane.setName("resultsEditorPane"); // NOI18N
+    resultsEditorPane.setPreferredSize(new Dimension(500, 300));
+    resultsEditorPane.addHyperlinkListener(formListener);
+    resultsScrollPane.setViewportView(resultsEditorPane);
+
+    resultsPanel.add(resultsScrollPane);
+
+    containerPanel.add(resultsPanel, BorderLayout.CENTER);
+
+    getContentPane().add(containerPanel);
+
+    pack();
+  }
+
+  // Code for dispatching events from components to event handlers.
+
+  private class FormListener implements ActionListener, HyperlinkListener {
+    FormListener() {}
+    public void actionPerformed(ActionEvent evt) {
+      if (evt.getSource() == launchButton) {
+        ReadSegmentDBase.this.launchButtonActionPerformed(evt);
+      }
+    }
+
+    public void hyperlinkUpdate(HyperlinkEvent evt) {
+      if (evt.getSource() == resultsEditorPane) {
+        ReadSegmentDBase.this.resultsEditorPaneHyperlinkUpdate(evt);
+      }
+    }
+  }//GEN-END:initComponents
+
+  private void launchButtonActionPerformed (ActionEvent evt) {//GEN-FIRST:event_launchButtonActionPerformed
+    ReadSegmentDBase.this.searchProgressBar.setIndeterminate (true);
+    // Disable button and set new icon.
+    ReadSegmentDBase.this.launchButton.setEnabled (false);
+
+    Thread queryMainDBase = new Thread ("AIME#QuerySegmentDBase") {
+      @Override
+      public void run () {
+        switch (ReadSegmentDBase.this.functionsComboBox.getSelectedIndex ()) {
+          case 0:
+            ReadSegmentDBase.this.resultsEditorPane.setText (ReadSegmentDBase.this.u.listSegments ().toString ());
+            break;
+          case 1:
+            ReadSegmentDBase.this.searchProgressBar.setIndeterminate (false);
+            String msg2 =
+                    "<html>"
+                    + "<body>"
+                    + "<p>"
+                    + "<b>Please enter the URL in the box bellow:</b>"
+                    + "<br/>"
+                    + "<b><u>Example:</u></b> http://www.example.com"
+                    + "</p>"
+                    + "</body>"
+                    + "</html>";
+            String userInput = JOptionPane.showInputDialog (ReadSegmentDBase.thisFrame, msg2, "Enter URL", JOptionPane.PLAIN_MESSAGE);
+
+            if (userInput == null || userInput.isEmpty ()) {
+              break;
+            }
+
+            ReadSegmentDBase.this.searchProgressBar.setIndeterminate (true);
+            ReadSegmentDBase.this.resultsEditorPane.setText (ReadSegmentDBase.this.u.getInfo (userInput).toString ());
+            break;
+        }
+
+        ReadSegmentDBase.this.searchProgressBar.setIndeterminate (false);
+        ReadSegmentDBase.this.launchButton.setEnabled (true); // Revert to old icon and enable button.
+        this.interrupt (); // Interrupt this thread since it only works once.
+      }
+    };
+
+    // Launch the query search of the index.
+    queryMainDBase.start ();
+  }//GEN-LAST:event_launchButtonActionPerformed
+
+  private void resultsEditorPaneHyperlinkUpdate (HyperlinkEvent evt) {//GEN-FIRST:event_resultsEditorPaneHyperlinkUpdate
+    final javax.swing.event.HyperlinkEvent event = evt;
+
+    if (event.getEventType () == HyperlinkEvent.EventType.ENTERED) {
+      EventQueue.invokeLater (new Runnable () {
+        @Override
+        public void run () {
+          SwingUtilities.getWindowAncestor (resultsEditorPane).setCursor (Cursor.getPredefinedCursor (Cursor.HAND_CURSOR));
+          resultsEditorPane.setToolTipText (event.getURL ().toExternalForm ());
+        }
+      });
+    }
+    else if (event.getEventType () == HyperlinkEvent.EventType.EXITED) {
+      EventQueue.invokeLater (new Runnable () {
+        @Override
+        public void run () {
+          SwingUtilities.getWindowAncestor (resultsEditorPane).setCursor (Cursor.getDefaultCursor ());
+          resultsEditorPane.setToolTipText (null);
+        }
+      });
+    }
+    else if (event.getEventType () == HyperlinkEvent.EventType.ACTIVATED) {
+      if (Desktop.isDesktopSupported ()) {
+        try {
+          Desktop.getDesktop ().browse (event.getURL ().toURI ());
+        }
+        catch (Exception ex) {
+          LOG.error ("Generic error on link listener.", ex);
+        }
+      }
+      else {
+        LOG.error ("Hyperlinking not supported here.");
+      }
+    }
+  }//GEN-LAST:event_resultsEditorPaneHyperlinkUpdate
+  // Variables declaration - do not modify//GEN-BEGIN:variables
+  private JPanel containerPanel;
+  private JComboBox functionsComboBox;
+  private JButton launchButton;
+  private JPanel optionsPanel;
+  private JPanel progressPanel;
+  private JEditorPane resultsEditorPane;
+  private JPanel resultsPanel;
+  private JScrollPane resultsScrollPane;
+  private JProgressBar searchProgressBar;
+  private JPanel toolsPanel;
+  // End of variables declaration//GEN-END:variables
+}

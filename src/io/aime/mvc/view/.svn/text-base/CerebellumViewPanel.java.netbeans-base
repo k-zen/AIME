@@ -1,0 +1,318 @@
+package io.aime.mvc.view;
+
+import io.aime.mvc.model.CerebellumGeneralTableModel;
+import io.aime.mvc.model.CerebellumLocalObtainedTableModel;
+import io.aime.mvc.model.CerebellumRemoteReceivedTableModel;
+import io.aime.mvc.view.tools.ForLabelTableCellRenderer;
+import io.aime.mvc.view.tools.TableColumnAdjuster;
+import java.awt.Color;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.beans.PropertyChangeEvent;
+import javax.swing.JOptionPane;
+import javax.swing.JTable;
+import net.apkc.emma.mvc.AbstractController;
+import net.apkc.emma.mvc.AbstractViewPanel;
+
+final class CerebellumViewPanel extends AbstractViewPanel
+{
+
+    private CerebellumGeneralTableModel model1;
+    private CerebellumLocalObtainedTableModel model2;
+    private CerebellumRemoteReceivedTableModel model3;
+
+    final static AbstractViewPanel newBuild()
+    {
+        return new CerebellumViewPanel();
+    }
+
+    private CerebellumViewPanel()
+    {
+        createComponent().configure(null).markVisibility(true);
+    }
+
+    @Override
+    protected AbstractViewPanel createComponent()
+    {
+        initComponents();
+        return this;
+    }
+
+    @Override
+    public AbstractViewPanel configure(Object o)
+    {
+        // ALLOWED ACTIONS
+        // CONTROLLERS
+        // CONFIGURE MODELS
+        // CONFIGURE VIEWS
+
+        generalTable.setModel(model1 = new CerebellumGeneralTableModel());
+        generalTable.setRowHeight(20);
+        generalTable.setRowSelectionAllowed(false);
+        generalTable.setShowGrid(false);
+        generalTable.setGridColor(Color.DARK_GRAY);
+        generalTable.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
+
+        TableColumnAdjuster tca1 = new TableColumnAdjuster(generalTable);
+        tca1.setColumnHeaderIncluded(true);
+        tca1.setColumnDataIncluded(false);
+        tca1.adjustColumns();
+        generalTable.addMouseListener(new CerebellumViewPanelEvt());
+        generalTable.getColumnModel().getColumn(CerebellumGeneralTableModel.HELP_COLUMN_ID).setCellRenderer(ForLabelTableCellRenderer.newBuild());
+
+        localObtainedTable.setModel(model2 = new CerebellumLocalObtainedTableModel());
+        localObtainedTable.setRowHeight(20);
+        localObtainedTable.setRowSelectionAllowed(false);
+        localObtainedTable.setShowGrid(false);
+        localObtainedTable.setGridColor(Color.DARK_GRAY);
+        localObtainedTable.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
+
+        TableColumnAdjuster tca2 = new TableColumnAdjuster(localObtainedTable);
+        tca2.setColumnHeaderIncluded(true);
+        tca2.setColumnDataIncluded(false);
+        tca2.adjustColumns();
+        localObtainedTable.addMouseListener(new CerebellumViewPanelEvt());
+        localObtainedTable.getColumnModel().getColumn(CerebellumLocalObtainedTableModel.HELP_COLUMN_ID).setCellRenderer(ForLabelTableCellRenderer.newBuild());
+
+        remoteReceivedTable.setModel(model3 = new CerebellumRemoteReceivedTableModel());
+        remoteReceivedTable.setRowHeight(20);
+        remoteReceivedTable.setRowSelectionAllowed(false);
+        remoteReceivedTable.setShowGrid(false);
+        remoteReceivedTable.setGridColor(Color.DARK_GRAY);
+        remoteReceivedTable.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
+
+        TableColumnAdjuster tca3 = new TableColumnAdjuster(remoteReceivedTable);
+        tca3.setColumnHeaderIncluded(true);
+        tca3.setColumnDataIncluded(false);
+        tca3.adjustColumns();
+        remoteReceivedTable.addMouseListener(new CerebellumViewPanelEvt());
+        remoteReceivedTable.getColumnModel().getColumn(CerebellumRemoteReceivedTableModel.HELP_COLUMN_ID).setCellRenderer(ForLabelTableCellRenderer.newBuild());
+
+        return this;
+    }
+
+    @Override
+    public void modelPropertyChange(PropertyChangeEvent evt)
+    {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public AbstractController getController()
+    {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    private class CerebellumViewPanelEvt implements MouseListener
+    {
+
+        @Override
+        public void mouseClicked(MouseEvent e)
+        {
+            if (e.getSource() == generalTable)
+            {
+                if (generalTable.getSelectedColumn() == CerebellumGeneralTableModel.HELP_COLUMN_ID)
+                {
+                    if (generalTable.getSelectedRow() == CerebellumGeneralTableModel.CONN_TIME_ROW_ID)
+                    {
+                        JOptionPane.showMessageDialog(
+                                generalTable,
+                                "This cell shows the average connection time\n"
+                                + "in milliseconds of all nodes connecting to\n"
+                                + "the Cerebellum.\n"
+                                + "High values (>1000) could mean network problems.",
+                                "Help",
+                                JOptionPane.INFORMATION_MESSAGE);
+                    }
+                }
+            }
+            else if (e.getSource() == localObtainedTable)
+            {
+                if (localObtainedTable.getSelectedColumn() == CerebellumLocalObtainedTableModel.HELP_COLUMN_ID)
+                {
+                    if (localObtainedTable.getSelectedRow() == CerebellumLocalObtainedTableModel.AM_COUNTER_ROW_ID)
+                    {
+                        JOptionPane.showMessageDialog(
+                                localObtainedTable,
+                                "This cell shows how many times the application has requested\n"
+                                + "data of type \"AIME Metadata\" to the Cerebellum.\n"
+                                + "AIME's metadata is used to keep track of crawling jobs,\n"
+                                + "seeds, and other types of info regarding the functioning\n"
+                                + "of AIME.",
+                                "Help",
+                                JOptionPane.INFORMATION_MESSAGE);
+                    }
+                    else if (localObtainedTable.getSelectedRow() == CerebellumLocalObtainedTableModel.CD_COUNTER_ROW_ID)
+                    {
+                        JOptionPane.showMessageDialog(
+                                localObtainedTable,
+                                "This cell shows how many times the application has requested\n"
+                                + "data of type \"Cerebellum Data\" to the Cerebellum.\n"
+                                + "Cerebellum data stores filters, statistics, connection times,\n"
+                                + "and other information from AIME's nodes.",
+                                "Help",
+                                JOptionPane.INFORMATION_MESSAGE);
+                    }
+                    else if (localObtainedTable.getSelectedRow() == CerebellumLocalObtainedTableModel.FM_COUNTER_ROW_ID)
+                    {
+                        JOptionPane.showMessageDialog(
+                                localObtainedTable,
+                                "This cell shows how many times the application has requested\n"
+                                + "data of type \"Fetcher Metadata\" to the Cerebellum.\n"
+                                + "Fetcher metadata stores statistics coming from all fetching nodes.",
+                                "Help",
+                                JOptionPane.INFORMATION_MESSAGE);
+                    }
+                }
+            }
+            else if (e.getSource() == remoteReceivedTable)
+            {
+                if (remoteReceivedTable.getSelectedColumn() == CerebellumRemoteReceivedTableModel.HELP_COLUMN_ID)
+                {
+                    if (remoteReceivedTable.getSelectedRow() == CerebellumRemoteReceivedTableModel.RD_COUNTER_ROW_ID)
+                    {
+                        JOptionPane.showMessageDialog(
+                                remoteReceivedTable,
+                                "This cell shows how many times the application has sent\n"
+                                + "data of type all types to the Cerebellum.\n"
+                                + "AIME's components are always sending information and data to\n"
+                                + "the Cerebellum.",
+                                "Help",
+                                JOptionPane.INFORMATION_MESSAGE);
+                    }
+                }
+            }
+        }
+
+        @Override
+        public void mousePressed(MouseEvent e)
+        {
+        }
+
+        @Override
+        public void mouseReleased(MouseEvent e)
+        {
+        }
+
+        @Override
+        public void mouseEntered(MouseEvent e)
+        {
+        }
+
+        @Override
+        public void mouseExited(MouseEvent e)
+        {
+        }
+    }
+
+    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
+    private void initComponents()
+    {
+
+        brainImgPanel = new javax.swing.JPanel();
+        brainImgLabel = new javax.swing.JLabel();
+        containerPanel = new javax.swing.JPanel();
+        containerSplitPane = new javax.swing.JSplitPane();
+        generalDataPanel = new javax.swing.JPanel();
+        generalScrollPane = new javax.swing.JScrollPane();
+        generalTable = new javax.swing.JTable();
+        obtainedReceivedPanel = new javax.swing.JPanel();
+        obtainedReceivedSplitPane = new javax.swing.JSplitPane();
+        localObtainedDataPanel = new javax.swing.JPanel();
+        localObtainedScrollPane = new javax.swing.JScrollPane();
+        localObtainedTable = new javax.swing.JTable();
+        remoteReceivedDataPanel = new javax.swing.JPanel();
+        remoteReceivedScrollPane = new javax.swing.JScrollPane();
+        remoteReceivedTable = new javax.swing.JTable();
+
+        setName("Form"); // NOI18N
+        setLayout(new javax.swing.BoxLayout(this, javax.swing.BoxLayout.Y_AXIS));
+
+        brainImgPanel.setBorder(javax.swing.BorderFactory.createEmptyBorder(5, 5, 5, 5));
+        brainImgPanel.setName("brainImgPanel"); // NOI18N
+
+        brainImgLabel.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resources/img/Cerebellum.png"))); // NOI18N
+        brainImgLabel.setName("brainImgLabel"); // NOI18N
+        brainImgPanel.add(brainImgLabel);
+
+        add(brainImgPanel);
+
+        containerPanel.setName("containerPanel"); // NOI18N
+        containerPanel.setLayout(new javax.swing.BoxLayout(containerPanel, javax.swing.BoxLayout.LINE_AXIS));
+
+        containerSplitPane.setOrientation(javax.swing.JSplitPane.VERTICAL_SPLIT);
+        containerSplitPane.setResizeWeight(.5d);
+        containerSplitPane.setName("containerSplitPane"); // NOI18N
+
+        generalDataPanel.setBorder(javax.swing.BorderFactory.createTitledBorder("General Stats"));
+        generalDataPanel.setName("generalDataPanel"); // NOI18N
+        generalDataPanel.setLayout(new javax.swing.BoxLayout(generalDataPanel, javax.swing.BoxLayout.LINE_AXIS));
+
+        generalScrollPane.setName("generalScrollPane"); // NOI18N
+
+        generalTable.setName("generalTable"); // NOI18N
+        generalScrollPane.setViewportView(generalTable);
+
+        generalDataPanel.add(generalScrollPane);
+
+        containerSplitPane.setLeftComponent(generalDataPanel);
+
+        obtainedReceivedPanel.setName("obtainedReceivedPanel"); // NOI18N
+        obtainedReceivedPanel.setLayout(new javax.swing.BoxLayout(obtainedReceivedPanel, javax.swing.BoxLayout.LINE_AXIS));
+
+        obtainedReceivedSplitPane.setOrientation(javax.swing.JSplitPane.VERTICAL_SPLIT);
+        obtainedReceivedSplitPane.setResizeWeight(.5d);
+        obtainedReceivedSplitPane.setName("obtainedReceivedSplitPane"); // NOI18N
+
+        localObtainedDataPanel.setBorder(javax.swing.BorderFactory.createTitledBorder("Local Obtained Stats"));
+        localObtainedDataPanel.setName("localObtainedDataPanel"); // NOI18N
+        localObtainedDataPanel.setLayout(new javax.swing.BoxLayout(localObtainedDataPanel, javax.swing.BoxLayout.LINE_AXIS));
+
+        localObtainedScrollPane.setName("localObtainedScrollPane"); // NOI18N
+
+        localObtainedTable.setName("localObtainedTable"); // NOI18N
+        localObtainedScrollPane.setViewportView(localObtainedTable);
+
+        localObtainedDataPanel.add(localObtainedScrollPane);
+
+        obtainedReceivedSplitPane.setLeftComponent(localObtainedDataPanel);
+
+        remoteReceivedDataPanel.setBorder(javax.swing.BorderFactory.createTitledBorder("Remote Received Stats"));
+        remoteReceivedDataPanel.setName("remoteReceivedDataPanel"); // NOI18N
+        remoteReceivedDataPanel.setLayout(new javax.swing.BoxLayout(remoteReceivedDataPanel, javax.swing.BoxLayout.LINE_AXIS));
+
+        remoteReceivedScrollPane.setName("remoteReceivedScrollPane"); // NOI18N
+
+        remoteReceivedTable.setName("remoteReceivedTable"); // NOI18N
+        remoteReceivedScrollPane.setViewportView(remoteReceivedTable);
+
+        remoteReceivedDataPanel.add(remoteReceivedScrollPane);
+
+        obtainedReceivedSplitPane.setRightComponent(remoteReceivedDataPanel);
+
+        obtainedReceivedPanel.add(obtainedReceivedSplitPane);
+
+        containerSplitPane.setRightComponent(obtainedReceivedPanel);
+
+        containerPanel.add(containerSplitPane);
+
+        add(containerPanel);
+    }// </editor-fold>//GEN-END:initComponents
+    // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JLabel brainImgLabel;
+    private javax.swing.JPanel brainImgPanel;
+    private javax.swing.JPanel containerPanel;
+    private javax.swing.JSplitPane containerSplitPane;
+    private javax.swing.JPanel generalDataPanel;
+    private javax.swing.JScrollPane generalScrollPane;
+    private javax.swing.JTable generalTable;
+    private javax.swing.JPanel localObtainedDataPanel;
+    private javax.swing.JScrollPane localObtainedScrollPane;
+    private javax.swing.JTable localObtainedTable;
+    private javax.swing.JPanel obtainedReceivedPanel;
+    private javax.swing.JSplitPane obtainedReceivedSplitPane;
+    private javax.swing.JPanel remoteReceivedDataPanel;
+    private javax.swing.JScrollPane remoteReceivedScrollPane;
+    private javax.swing.JTable remoteReceivedTable;
+    // End of variables declaration//GEN-END:variables
+}

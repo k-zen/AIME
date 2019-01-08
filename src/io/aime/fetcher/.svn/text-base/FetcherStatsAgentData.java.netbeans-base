@@ -1,0 +1,375 @@
+package io.aime.fetcher;
+
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.Externalizable;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
+import org.apache.hadoop.io.Writable;
+
+/**
+ * Serializable object containing data from the IndexServer.
+ *
+ * @author Andreas P. Koenzen <akc at apkc.net>
+ * @version 0.2
+ */
+public class FetcherStatsAgentData implements Writable, Externalizable
+{
+
+    // Status Table
+    private int success = 0;
+    private int failed = 0;
+    private int gone = 0;
+    private int moved = 0;
+    private int tempMoved = 0;
+    private int notFound = 0;
+    private int retry = 0;
+    private int exception = 0;
+    private int accessDenied = 0;
+    private int robotsDenied = 0;
+    private int redirExceeded = 0;
+    private int notModified = 0;
+    private int wouldBlock = 0;
+    private int blocked = 0;
+    private int unknown = 0;
+    // Stats Table
+    private long activeThreads = 0L;
+    private long waitingThreads = 0L;
+    private long queueSize = 0L;
+    private long pages = 0L;
+    private long errors = 0L;
+    private long elapsed = 0L;
+    private long bytes = 0L;
+
+    public FetcherStatsAgentData()
+    {
+    }
+
+    public static FetcherStatsAgentData newBuild()
+    {
+        return new FetcherStatsAgentData();
+    }
+
+    public int getSuccess()
+    {
+        return success;
+    }
+
+    public int getFailed()
+    {
+        return failed;
+    }
+
+    public int getGone()
+    {
+        return gone;
+    }
+
+    public int getMoved()
+    {
+        return moved;
+    }
+
+    public int getTempMoved()
+    {
+        return tempMoved;
+    }
+
+    public int getNotFound()
+    {
+        return notFound;
+    }
+
+    public int getRetry()
+    {
+        return retry;
+    }
+
+    public int getException()
+    {
+        return exception;
+    }
+
+    public int getAccessDenied()
+    {
+        return accessDenied;
+    }
+
+    public int getRobotsDenied()
+    {
+        return robotsDenied;
+    }
+
+    public int getRedirExceeded()
+    {
+        return redirExceeded;
+    }
+
+    public int getNotModified()
+    {
+        return notModified;
+    }
+
+    public int getWouldBlock()
+    {
+        return wouldBlock;
+    }
+
+    public int getBlocked()
+    {
+        return blocked;
+    }
+
+    public int getUnknown()
+    {
+        return unknown;
+    }
+
+    public long getActiveThreads()
+    {
+        return activeThreads;
+    }
+
+    public long getWaitingThreads()
+    {
+        return waitingThreads;
+    }
+
+    public long getQueueSize()
+    {
+        return queueSize;
+    }
+
+    public long getPages()
+    {
+        return pages;
+    }
+
+    public long getErrors()
+    {
+        return errors;
+    }
+
+    public long getElapsed()
+    {
+        return elapsed;
+    }
+
+    public long getBytes()
+    {
+        return bytes;
+    }
+
+    public FetcherStatsAgentData setSuccess(int success)
+    {
+        this.success = success;
+        return this;
+    }
+
+    public FetcherStatsAgentData setFailed(int failed)
+    {
+        this.failed = failed;
+        return this;
+    }
+
+    public FetcherStatsAgentData setGone(int gone)
+    {
+        this.gone = gone;
+        return this;
+    }
+
+    public FetcherStatsAgentData setMoved(int moved)
+    {
+        this.moved = moved;
+        return this;
+    }
+
+    public FetcherStatsAgentData setTempMoved(int tempMoved)
+    {
+        this.tempMoved = tempMoved;
+        return this;
+    }
+
+    public FetcherStatsAgentData setNotFound(int notFound)
+    {
+        this.notFound = notFound;
+        return this;
+    }
+
+    public FetcherStatsAgentData setRetry(int retry)
+    {
+        this.retry = retry;
+        return this;
+    }
+
+    public FetcherStatsAgentData setException(int exception)
+    {
+        this.exception = exception;
+        return this;
+    }
+
+    public FetcherStatsAgentData setAccessDenied(int accessDenied)
+    {
+        this.accessDenied = accessDenied;
+        return this;
+    }
+
+    public FetcherStatsAgentData setRobotsDenied(int robotsDenied)
+    {
+        this.robotsDenied = robotsDenied;
+        return this;
+    }
+
+    public FetcherStatsAgentData setRedirExceeded(int redirExceeded)
+    {
+        this.redirExceeded = redirExceeded;
+        return this;
+    }
+
+    public FetcherStatsAgentData setNotModified(int notModified)
+    {
+        this.notModified = notModified;
+        return this;
+    }
+
+    public FetcherStatsAgentData setWouldBlock(int wouldBlock)
+    {
+        this.wouldBlock = wouldBlock;
+        return this;
+    }
+
+    public FetcherStatsAgentData setBlocked(int blocked)
+    {
+        this.blocked = blocked;
+        return this;
+    }
+
+    public FetcherStatsAgentData setUnknown(int unknown)
+    {
+        this.unknown = unknown;
+        return this;
+    }
+
+    public FetcherStatsAgentData setActiveThreads(long activeThreads)
+    {
+        this.activeThreads = activeThreads;
+        return this;
+    }
+
+    public FetcherStatsAgentData setWaitingThreads(long waitingThreads)
+    {
+        this.waitingThreads = waitingThreads;
+        return this;
+    }
+
+    public FetcherStatsAgentData setQueueSize(long queueSize)
+    {
+        this.queueSize = queueSize;
+        return this;
+    }
+
+    public FetcherStatsAgentData setPages(long pages)
+    {
+        this.pages = pages;
+        return this;
+    }
+
+    public FetcherStatsAgentData setErrors(long errors)
+    {
+        this.errors = errors;
+        return this;
+    }
+
+    public FetcherStatsAgentData setElapsed(long elapsed)
+    {
+        this.elapsed = elapsed;
+        return this;
+    }
+
+    public FetcherStatsAgentData setBytes(long bytes)
+    {
+        this.bytes = bytes;
+        return this;
+    }
+
+    @Override
+    public void write(DataOutput out) throws IOException
+    {
+        internalWrite(out);
+    }
+
+    @Override
+    public void readFields(DataInput in) throws IOException
+    {
+        internalRead(in);
+    }
+
+    @Override
+    public void writeExternal(ObjectOutput out) throws IOException
+    {
+        internalWrite(out);
+    }
+
+    @Override
+    public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException
+    {
+        internalRead(in);
+    }
+
+    private void internalWrite(DataOutput out) throws IOException
+    {
+        // Integer variables
+        out.writeInt(success);
+        out.writeInt(failed);
+        out.writeInt(gone);
+        out.writeInt(moved);
+        out.writeInt(tempMoved);
+        out.writeInt(notFound);
+        out.writeInt(retry);
+        out.writeInt(exception);
+        out.writeInt(accessDenied);
+        out.writeInt(robotsDenied);
+        out.writeInt(redirExceeded);
+        out.writeInt(notModified);
+        out.writeInt(wouldBlock);
+        out.writeInt(blocked);
+        out.writeInt(unknown);
+        // Long variables
+        out.writeLong(activeThreads);
+        out.writeLong(waitingThreads);
+        out.writeLong(queueSize);
+        out.writeLong(pages);
+        out.writeLong(errors);
+        out.writeLong(elapsed);
+        out.writeLong(bytes);
+    }
+
+    private void internalRead(DataInput in) throws IOException
+    {
+        // Integer variables
+        success = in.readInt();
+        failed = in.readInt();
+        gone = in.readInt();
+        moved = in.readInt();
+        tempMoved = in.readInt();
+        notFound = in.readInt();
+        retry = in.readInt();
+        exception = in.readInt();
+        accessDenied = in.readInt();
+        robotsDenied = in.readInt();
+        redirExceeded = in.readInt();
+        notModified = in.readInt();
+        wouldBlock = in.readInt();
+        blocked = in.readInt();
+        unknown = in.readInt();
+        // Long variables
+        activeThreads = in.readLong();
+        waitingThreads = in.readLong();
+        queueSize = in.readLong();
+        pages = in.readLong();
+        errors = in.readLong();
+        elapsed = in.readLong();
+        bytes = in.readLong();
+    }
+}

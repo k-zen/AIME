@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<plugin id="protocol-httpclient">
+    <requires>
+        <import plugin="aime-extensionpoints"/>
+    </requires>
+    <extension id="HTTP" point="io.aime.protocol.Protocol">
+        <implementation id="HTTP" class="io.aime.plugins.protocolhttpclient.HTTP">
+            <parameter name="protocolName" value="http"/>
+        </implementation>
+    </extension>
+    <extension id="HTTPS" point="io.aime.protocol.Protocol">
+        <implementation id="HTTPS" class="io.aime.plugins.protocolhttpclient.HTTP">
+            <parameter name="protocolName" value="https"/>
+        </implementation>
+    </extension>
+</plugin>

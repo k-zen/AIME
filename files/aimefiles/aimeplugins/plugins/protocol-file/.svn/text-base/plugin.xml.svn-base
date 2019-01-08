@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<plugin id="protocol-file">
+    <requires>
+        <import plugin="aime-extensionpoints"/>
+    </requires>
+    <extension id="File" point="io.aime.protocol.Protocol">
+        <implementation id="File" class="io.aime.plugins.protocolfile.File">
+            <parameter name="protocolName" value="file"/>
+        </implementation>
+    </extension>
+</plugin>

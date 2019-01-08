@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<plugin id="protocol-smb">
+    <requires>
+        <import plugin="aime-extensionpoints"/>
+    </requires>
+    <extension id="Samba" point="io.aime.protocol.Protocol">
+        <implementation id="Samba" class="io.aime.plugins.protocolsmb.Samba">
+            <parameter name="protocolName" value="smb"/>
+        </implementation>
+    </extension>
+</plugin>

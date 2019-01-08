@@ -1,0 +1,279 @@
+package io.aime.crawl;
+
+import io.aime.bot.Reports;
+import io.aime.cerebellum.CerebellumDHI;
+import io.aime.util.AIMEConfiguration;
+import io.aime.util.AIMEConstants;
+import io.aime.util.Timer;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
+import javax.swing.SwingWorker;
+import net.apkc.emma.tasks.Task;
+import org.apache.hadoop.io.ObjectWritable;
+import org.apache.hadoop.util.StringUtils;
+import org.apache.log4j.Logger;
+
+/**
+ * Encapsulates a crawling job.
+ *
+ * @author Andreas P. Koenzen <akc at apkc.net>
+ * @version 0.2
+ */
+public class CrawlJob
+{
+
+    private static final Logger LOG = Logger.getLogger(CrawlJob.class.getName());
+    private final String CRAWL_HOME = AIMEConstants.DEFAULT_JOB_NAME.getStringConstant();
+    private final CrawlMethods methods = new CrawlMethods();
+    private AtomicInteger currentDepth = new AtomicInteger(0);
+    private Timer timer = new Timer();
+    private Timer partialTimer = new Timer();
+    private boolean isRunning = false;
+    private boolean isStarted = false;
+
+    private CrawlJob()
+    {
+    }
+
+    public static CrawlJob newBuild()
+    {
+        return new CrawlJob();
+    }
+
+    /**
+     * Send the order for a pause in the job.
+     *
+     * @param runner The thread from where the function was ran.
+     */
+    public void pauseJob(SwingWorker<?, ?> runner)
+    {
+        setRunningState(false);
+        methods.pause();
+    }
+
+    /**
+     * Send the order for a continuation on a paused job.
+     *
+     * @param runner The thread from where the function was ran.
+     */
+    public void resumeJob(SwingWorker<?, ?> runner)
+    {
+        if (!isRunning())
+        {
+            setRunningState(true);
+            methods.resume();
+        }
+    }
+
+    /**
+     * Checks if a crawl job is running or not.
+     *
+     * @return TRUE if a crawl job is running, FALSE otherwise.
+     */
+    public boolean isRunning()
+    {
+        return isRunning;
+    }
+
+    public boolean isStarted()
+    {
+        return isStarted;
+    }
+
+    /**
+     * Marks a crawl job as active/running.
+     *
+     * @param state TRUE, a crawl job is running, FALSE otherwise.
+     */
+    private void setRunningState(boolean state)
+    {
+        isRunning = state;
+    }
+
+    /**
+     * Computes the total execution time of the current crawl job.
+     *
+     * @return The total time of execution.
+     */
+    public long getExecutionTime()
+    {
+        return timer.getExecutionTime();
+    }
+
+    /**
+     * Returns the function that's functioning right now.
+     *
+     * @return The name of the current function.
+     */
+    public String getCurrentRunningFunction()
+    {
+        return methods.getCurrentRunningFunction();
+    }
+
+    /**
+     * Returns the current depth of this crawl job.
+     *
+     * @return The depth of the current crawl job.
+     */
+    public int getCurrentDepth()
+    {
+        return currentDepth.get();
+    }
+
+    /**
+     * This method will mark a crawling job as completed.
+     */
+    private void markCompletedCycle(CerebellumDHI c)
+    {
+        c.modifyLocalData(CerebellumDHI.AIME_METADATA, CerebellumDHI.AIME_IS_CYCLE_COMPLETE_DATA, new ObjectWritable(true));
+        c.modifyLocalData(CerebellumDHI.AIME_METADATA, CerebellumDHI.AIME_LAST_FUNCTION_DATA, new ObjectWritable(AIMEConstants.NO_FUNCTION_METHOD_NAME.getStringConstant()));
+    }
+
+    /**
+     * This method will mark a crawling job as uncompleted.
+     */
+    private void markUncompletedCycle(CerebellumDHI c)
+    {
+        c.modifyLocalData(CerebellumDHI.AIME_METADATA, CerebellumDHI.AIME_IS_CYCLE_COMPLETE_DATA, new ObjectWritable(false));
+    }
+
+    /**
+     * Checks if this particular function should run.
+     *
+     * @param function The function to check.
+     *
+     * @return TRUE if the function should run, FALSE otherwise.
+     */
+    private boolean shouldRun(String function)
+    {
+        return ((List<String>) CerebellumDHI.getInstance().obtainLocalData(CerebellumDHI.AIME_METADATA, CerebellumDHI.AIME_FUNCTIONS_TO_EXECUTE).get()).contains(function);
+    }
+
+    /**
+     * This method will run a new crawling job, or will resume an old one.
+     *
+     * @param depth    The depth of the crawler.
+     * @param sendmail If it should send notifications by email.
+     * @param runner   The thread that launch this method.
+     */
+    public void runJob(int depth, boolean sendmail, Task runner)
+    {
+        isStarted = true;
+        setRunningState(true); // Mark as active.
+        timer.starTimer(); // Start the overall timer.
+        markUncompletedCycle(CerebellumDHI.getInstance()); // Mark this cycle as uncompleted.
+
+        // Run job!
+        try
+        {
+            if (shouldRun(AIMEConstants.INJECTOR_METHOD_NAME.getStringConstant()))
+            {
+                methods.runMethod(AIMEConstants.INJECTOR_METHOD_NAME.getStringConstant(), AIMEConstants.INJECTOR_JOB_NAME.getStringConstant(), new Object[]
+                          {
+                              CRAWL_HOME,
+                              runner,
+                              (Integer) CerebellumDHI.getInstance().obtainLocalData(CerebellumDHI.AIME_METADATA, CerebellumDHI.AIME_EXECUTION_TYPE_DATA).get()
+                });
+            }
+            runner.reportProgress(16);
+
+            int start = (Integer) CerebellumDHI.getInstance().obtainLocalData(CerebellumDHI.AIME_METADATA, CerebellumDHI.AIME_COMPLETED_ITERATIONS_DATA).get();
+            for (int i = start; i < (start + ((depth > 0) ? depth : (Integer.MAX_VALUE - start))); i++)
+            {
+                // Store the value of the current depth.
+                currentDepth.set(i + 1);
+                // Start the iteration timer.
+                partialTimer.starTimer();
+
+                if (shouldRun(AIMEConstants.GENERATOR_METHOD_NAME.getStringConstant()))
+                {
+                    methods.runMethod(AIMEConstants.GENERATOR_METHOD_NAME.getStringConstant(), AIMEConstants.GENERATOR_JOB_NAME.getStringConstant(), new Object[]
+                              {
+                                  CRAWL_HOME,
+                                  runner,
+                                  (Integer) CerebellumDHI.getInstance().obtainLocalData(CerebellumDHI.AIME_METADATA, CerebellumDHI.AIME_EXECUTION_TYPE_DATA).get()
+                    });
+                }
+                runner.reportProgress(32);
+
+                if (shouldRun(AIMEConstants.FETCH_METHOD_NAME.getStringConstant()))
+                {
+                    methods.runMethod(AIMEConstants.FETCH_METHOD_NAME.getStringConstant(), AIMEConstants.FETCHER_JOB_NAME.getStringConstant(), new Object[]
+                              {
+                                  CRAWL_HOME,
+                                  runner,
+                                  (Integer) CerebellumDHI.getInstance().obtainLocalData(CerebellumDHI.AIME_METADATA, CerebellumDHI.AIME_EXECUTION_TYPE_DATA).get()
+                    });
+                }
+                runner.reportProgress(48);
+
+                if (shouldRun(AIMEConstants.PARSE_METHOD_NAME.getStringConstant()))
+                {
+                    methods.runMethod(AIMEConstants.PARSE_METHOD_NAME.getStringConstant(), AIMEConstants.PARSE_JOB_NAME.getStringConstant(), new Object[]
+                              {
+                                  CRAWL_HOME,
+                                  runner,
+                                  (Integer) CerebellumDHI.getInstance().obtainLocalData(CerebellumDHI.AIME_METADATA, CerebellumDHI.AIME_EXECUTION_TYPE_DATA).get()
+                    });
+                }
+                runner.reportProgress(64);
+
+                if (shouldRun(AIMEConstants.UPDATE_METHOD_NAME.getStringConstant()))
+                {
+                    methods.runMethod(AIMEConstants.UPDATE_METHOD_NAME.getStringConstant(), AIMEConstants.UPDATE_JOB_NAME.getStringConstant(), new Object[]
+                              {
+                                  CRAWL_HOME,
+                                  runner,
+                                  (Integer) CerebellumDHI.getInstance().obtainLocalData(CerebellumDHI.AIME_METADATA, CerebellumDHI.AIME_EXECUTION_TYPE_DATA).get()
+                    });
+                }
+                runner.reportProgress(80);
+
+                if (shouldRun(AIMEConstants.INDEX_METHOD_NAME.getStringConstant()))
+                {
+                    methods.runMethod(AIMEConstants.INDEX_METHOD_NAME.getStringConstant(), AIMEConstants.INDEXER_JOB_NAME.getStringConstant(), new Object[]
+                              {
+                                  CRAWL_HOME,
+                                  runner,
+                                  (Integer) CerebellumDHI.getInstance().obtainLocalData(CerebellumDHI.AIME_METADATA, CerebellumDHI.AIME_EXECUTION_TYPE_DATA).get()
+                    });
+                }
+                runner.reportProgress(100);
+
+                // Stop the iteration timer.
+                partialTimer.endTimer();
+                // Send reports.
+                if (sendmail)
+                {
+                    Reports.sendMailReport(new AIMEConfiguration().create(), i, CRAWL_HOME, partialTimer.computeOperationTime(Timer.Time.SECOND), 0.0d, 1);
+                }
+                // Update AIME metadata.
+                CerebellumDHI.getInstance().modifyLocalData(
+                        CerebellumDHI.AIME_METADATA,
+                        CerebellumDHI.AIME_COMPLETED_ITERATIONS_DATA,
+                        new ObjectWritable((Integer) CerebellumDHI.getInstance().obtainLocalData(
+                                        CerebellumDHI.AIME_METADATA,
+                                        CerebellumDHI.AIME_COMPLETED_ITERATIONS_DATA).get() + 1));
+            }
+
+            // Mark this jobs as done.
+            markCompletedCycle(CerebellumDHI.getInstance());
+            // End the overall timer.
+            timer.endTimer();
+            // Send reports.
+            if (sendmail)
+            {
+                Reports.sendMailReport(new AIMEConfiguration().create(), 0, CRAWL_HOME, 0.0d, timer.computeOperationTime(Timer.Time.SECOND), 2);
+            }
+        }
+        catch (Exception e)
+        {
+            LOG.fatal(StringUtils.stringifyException(e));
+        }
+        finally
+        {
+            setRunningState(false); // Mark as standby.
+            isStarted = false;
+        }
+    }
+}

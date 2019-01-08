@@ -1,0 +1,12 @@
+package io.aime.mvc.controller;
+
+import io.aime.mvc.model.FetcherGeneralStatisticsTableModel;
+import io.aime.mvc.model.FetcherProtocolStatusCodesTableModel;
+import net.apkc.emma.mvc.AbstractController;
+
+public class FetcherController extends AbstractController
+{
+
+    public static final Class FETCHER_PROTOCOL_STATUS_CODES_TABLE_MODEL = FetcherProtocolStatusCodesTableModel.class;
+    public static final Class FETCHER_GENERAL_STATISTICS_TABLE_MODEL = FetcherGeneralStatisticsTableModel.class;
+}

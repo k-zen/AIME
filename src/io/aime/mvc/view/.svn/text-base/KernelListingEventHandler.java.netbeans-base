@@ -1,0 +1,58 @@
+package io.aime.mvc.view;
+
+import io.aime.kernel.KernelSkeleton;
+import java.text.ParseException;
+import java.util.Date;
+import java.util.Locale;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JTable;
+import org.apache.hadoop.io.MD5Hash;
+import org.apache.lucene.document.DateTools;
+import org.ocpsoft.pretty.time.PrettyTime;
+
+class KernelListingEventHandler {
+
+//  void openKernelServersTableCell (int row, int column, JTable table, KernelSkeleton bean) {
+//    if (column == 0) {
+//      String key = "";
+//      if (table.getValueAt (row, 0) instanceof JLabel) {
+//        JLabel hostName = (JLabel) table.getValueAt (row, 0);
+//        key = (hostName.getText () == null) ? "" : hostName.getText ();
+//      }
+//      else {
+//        key = (table.getValueAt (row, 0) == null) ? "" : (String) table.getValueAt (row, 0);
+//      }
+//
+//      if (!key.equalsIgnoreCase ("")) {
+//        GeneralServerData data = Main.this.controller.getServer (bean, MD5Hash.digest (key.getBytes ()));
+//
+//        if (data == null) {
+//          return;
+//        }
+//
+//        // Format the date.
+//        String formatedLeasingDate = new Date ().toString ();
+//        try {
+//          formatedLeasingDate = new PrettyTime (new Locale ("en")).format (DateTools.stringToDate (DateTools.timeToString (data.getLeaseTime (), DateTools.Resolution.MILLISECOND)));
+//        }
+//        catch (ParseException e) {
+//          // Do nothing...
+//        }
+//
+//        JOptionPane.showMessageDialog (
+//                Main.thisFrame,
+//                HtmlMessageBuilder.buildOnlyOneParagraphMsg (
+//                "<u>Kernel Server Instance Information:</u><br/>"
+//                + "Host: " + data.getHost ().toString () + "<br/>"
+//                + "Instance Type: " + data.resolvInstanceType () + "<br/>"
+//                + "Leasing: " + formatedLeasingDate + "<br/>"
+//                + "Port: " + data.getPort () + "<br/>"
+//                + "State: " + data.getStateName ()),
+//                "Kernel Server Instance Information",
+//                JOptionPane.INFORMATION_MESSAGE,
+//                LookFeel.getIcon ("Info.png"));
+//      }
+//    }
+//  }
+}

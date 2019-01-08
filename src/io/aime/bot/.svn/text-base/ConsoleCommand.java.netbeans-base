@@ -1,0 +1,89 @@
+package io.aime.bot;
+
+// Apache Hadoop
+import org.apache.hadoop.io.Writable;
+
+// IO
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.Externalizable;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
+
+public class ConsoleCommand implements Externalizable, Writable {
+
+    private String command = "";
+
+    public ConsoleCommand() {
+    }
+
+    public static ConsoleCommand newBuild() {
+        return new ConsoleCommand();
+    }
+
+    public ConsoleCommand setCommand(String command) {
+        this.command = command;
+        return this;
+    }
+
+    public String getCommand() {
+        return command;
+    }
+
+    @Override
+    public void writeExternal(ObjectOutput out) throws IOException {
+        internalWrite(out);
+    }
+
+    @Override
+    public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
+        internalRead(in);
+    }
+
+    @Override
+    public void write(DataOutput out) throws IOException {
+        internalWrite(out);
+    }
+
+    @Override
+    public void readFields(DataInput in) throws IOException {
+        internalRead(in);
+    }
+
+    private void internalWrite(DataOutput out) throws IOException {
+        out.writeUTF(command);
+    }
+
+    private void internalRead(DataInput in) throws IOException {
+        command = in.readUTF();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof ConsoleCommand)) {
+            return false;
+        }
+
+        ConsoleCommand other = (ConsoleCommand) o;
+
+        return ((command.equals(other.command)));
+    }
+
+    @Override
+    public int hashCode() {
+        int res = 0;
+        res ^= command.hashCode();
+
+        return res;
+    }
+
+    /**
+     * Checks if this command is empty.
+     *
+     * @return TRUE if the command is empty, FALSE otherwise.
+     */
+    public boolean isEmpty() {
+        return (command.isEmpty()) ? true : false;
+    }
+}

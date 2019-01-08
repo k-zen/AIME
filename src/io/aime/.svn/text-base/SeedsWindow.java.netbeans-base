@@ -1,0 +1,123 @@
+package io.aime;
+
+// AIME
+import io.aime.mvc.controller.AbstractController;
+import io.aime.mvc.controller.SeedsController;
+import io.aime.mvc.model.AbstractModel;
+import io.aime.mvc.model.SeedsTableModel;
+import io.aime.mvc.view.AbstractViewPanel;
+import io.aime.mvc.view.SeedsViewPanel;
+
+// AWT
+import java.awt.Dimension;
+import java.awt.EventQueue;
+
+// Swing
+import javax.swing.BoxLayout;
+import javax.swing.WindowConstants;
+
+/**
+ * Frame for the Seeds.
+ *
+ * @author K-Zen
+ * @see Singleton Pattern
+ */
+public final class SeedsWindow extends AbstractFrame {
+
+    private static final SeedsWindow _INSTANCE = new SeedsWindow();
+    private boolean ready = false;
+    private SeedsController controller;
+    private SeedsViewPanel view;
+
+    public static SeedsWindow getInstance() {
+        return _INSTANCE;
+    }
+
+    private SeedsWindow() {
+    }
+
+    @Override
+    protected AbstractFrame createGUI() {
+        initComponents();
+        // CONTROLLERS
+        controller = new SeedsController();
+        // CONFIGURE MODELS
+        controller.addTableModel(new SeedsTableModel());
+        // VIEWS
+        view = new SeedsViewPanel(controller);
+        // CONFIGURE VIEWS
+        controller.addView(view);
+        // ADD VIEWS TO THIS PANEL.
+        add(view);
+        // Paint panel.
+        setLocationRelativeTo(MainWindow.getInstance());
+        setVisible(true);
+
+        ready = true;
+
+        return this;
+    }
+
+    @Override
+    protected AbstractFrame configure() {
+        return this;
+    }
+
+    @Override
+    public AbstractFrame makeVisible() {
+        if (ready) {
+            if (!isVisible()) {
+                setVisible(true);
+            }
+            else {
+                toFront();
+            }
+        }
+        else {
+            EventQueue.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    createGUI().configure();
+                }
+            });
+        }
+
+        return this;
+    }
+
+    @Override
+    protected AbstractController getController(byte id) {
+        switch (id) {
+            default:
+                return controller;
+        }
+    }
+
+    @Override
+    protected AbstractModel getModel(byte id) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    protected AbstractViewPanel getView(byte id) {
+        switch (id) {
+            default:
+                return view;
+        }
+    }
+
+    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
+    private void initComponents() {
+
+        setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+        setTitle("Seeds Management");
+        setMinimumSize(new Dimension(460, 320));
+        setName("Form"); // NOI18N
+        setPreferredSize(new Dimension(460, 320));
+        getContentPane().setLayout(new BoxLayout(getContentPane(), BoxLayout.LINE_AXIS));
+
+        pack();
+    }// </editor-fold>//GEN-END:initComponents
+    // Variables declaration - do not modify//GEN-BEGIN:variables
+    // End of variables declaration//GEN-END:variables
+}

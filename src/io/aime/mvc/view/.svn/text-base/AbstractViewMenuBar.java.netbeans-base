@@ -1,0 +1,12 @@
+package io.aime.mvc.view;
+
+// Beans
+import java.beans.PropertyChangeEvent;
+
+// Swing
+import javax.swing.JMenuBar;
+
+public abstract class AbstractViewMenuBar extends JMenuBar {
+
+    public abstract void modelPropertyChange(PropertyChangeEvent evt);
+}

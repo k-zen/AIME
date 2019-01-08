@@ -1,0 +1,129 @@
+package io.aime;
+
+// AIME
+import io.aime.mvc.controller.AbstractController;
+import io.aime.mvc.controller.SegmentDBaseController;
+import io.aime.mvc.model.AbstractModel;
+import io.aime.mvc.model.SegmentDBaseModel;
+import io.aime.mvc.view.AbstractViewPanel;
+import io.aime.mvc.view.SegmentDBaseViewPanel;
+
+// AWT
+import java.awt.Dimension;
+import java.awt.EventQueue;
+
+// Swing
+import javax.swing.BoxLayout;
+import javax.swing.WindowConstants;
+
+/**
+ * Frame for the segment DBase.
+ *
+ * @author K-Zen
+ * @see Singleton Pattern
+ */
+public final class SegmentDBaseWindow extends AbstractFrame {
+
+    private static final SegmentDBaseWindow _INSTANCE = new SegmentDBaseWindow();
+    private boolean ready = false;
+    private SegmentDBaseController controller;
+    private SegmentDBaseModel model;
+    private SegmentDBaseViewPanel view;
+
+    public static SegmentDBaseWindow getInstance() {
+        return _INSTANCE;
+    }
+
+    private SegmentDBaseWindow() {
+    }
+
+    @Override
+    protected AbstractFrame createGUI() {
+        initComponents();
+        // CONTROLLERS
+        controller = new SegmentDBaseController();
+        // MODELS
+        model = new SegmentDBaseModel();
+        // CONFIGURE MODELS
+        controller.addModel(model);
+        // VIEWS
+        view = new SegmentDBaseViewPanel(controller);
+        // CONFIGURE VIEWS
+        controller.addView(view);
+        // ADD VIEWS TO THIS PANEL.
+        add(view);
+        // Paint panel.
+        setLocationRelativeTo(MainWindow.getInstance());
+        setVisible(true);
+
+        ready = true;
+
+        return this;
+    }
+
+    @Override
+    protected AbstractFrame configure() {
+        return this;
+    }
+
+    @Override
+    public AbstractFrame makeVisible() {
+        if (ready) {
+            if (!isVisible()) {
+                setVisible(true);
+            }
+            else {
+                toFront();
+            }
+        }
+        else {
+            EventQueue.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    createGUI().configure();
+                }
+            });
+        }
+
+        return this;
+    }
+
+    @Override
+    protected AbstractController getController(byte id) {
+        switch (id) {
+            default:
+                return controller;
+        }
+    }
+
+    @Override
+    protected AbstractModel getModel(byte id) {
+        switch (id) {
+            default:
+                return model;
+        }
+    }
+
+    @Override
+    protected AbstractViewPanel getView(byte id) {
+        switch (id) {
+            default:
+                return view;
+        }
+    }
+
+    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
+    private void initComponents() {
+
+        setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+        setTitle("Read SegmentDBase");
+        setMinimumSize(new Dimension(600, 300));
+        setName("Form"); // NOI18N
+        setPreferredSize(new Dimension(600, 300));
+        getContentPane().setLayout(new BoxLayout(getContentPane(), BoxLayout.LINE_AXIS));
+
+        pack();
+    }// </editor-fold>//GEN-END:initComponents
+    // Variables declaration - do not modify//GEN-BEGIN:variables
+    // End of variables declaration//GEN-END:variables
+}

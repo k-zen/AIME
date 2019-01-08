@@ -1,0 +1,75 @@
+#!/bin/bash
+THIS="$0"
+while [ -h "$THIS" ]; do
+  ls=`ls -ld "$THIS"`
+  link=`expr "$ls" : '.*-> \(.*\)$'`
+  if expr "$link" : '.*/.*' > /dev/null; then
+    THIS="$link"
+  else
+    THIS=`dirname "$THIS"`/"$link"
+  fi
+done
+
+# Directories:
+THIS_DIR=`dirname "$THIS"`
+AIME_HOME=`cd "$THIS_DIR/.." ; pwd`
+
+# AIME Java Home:
+if [ "$AIME_JAVA_HOME" != "" ]; then
+  echo "# Info: Using JVM in PATH: $AIME_JAVA_HOME"
+  JAVA_HOME=$AIME_JAVA_HOME
+fi
+
+# Error message if a JVM is not found:
+if [ "$JAVA_HOME" = "" ]; then
+  echo "# Error: The environment variable JAVA_HOME is not initialized."
+  exit 1
+fi
+
+# PATH to Java instalation:
+JAVA=$JAVA_HOME/bin/java
+# Max. JVM Heap size:
+JAVA_HEAP_MAX=-Xmx400M
+
+# Check the size of the Heap for AIME:
+if [ "$AIME_HEAPSIZE" != "" ]; then
+  # echo "# Info: Running the app with $AIME_HEAPSIZE""MB Heap size."
+  JAVA_HEAP_MAX="-Xmx""$AIME_HEAPSIZE""m"
+fi
+
+# ClassPath:
+# 1. Configuration files.
+# 2. AIME's Plugins.
+# 3. AIME.
+CLASSPATH=$AIME_HOME/files/aimefiles/aimeconf/conf
+CLASSPATH=${CLASSPATH}:$AIME_HOME/files/aimefiles/aimeplugins
+CLASSPATH=${CLASSPATH}:$AIME_HOME/dist/AIME.jar
+
+# AIME Options:
+AIME_OPTS="$AIME_OPTS -Djava.security.krb5.realm=OX.AC.UK"
+AIME_OPTS="$AIME_OPTS -Djava.security.krb5.kdc=kdc0.ox.ac.uk:kdc1.ox.ac.uk"
+AIME_OPTS="$AIME_OPTS -Dlog4j.configuration=log4j.indexserver"
+
+# Setup 'java.library.path' for native code if necessary.
+# Used only in local mode. All the native folder must be included
+# here, in order for libraries like Sigar to work.
+JAVA_LIBRARY_PATH=''
+if [ -d "${AIME_HOME}/files/aimefiles/native" ]; then
+  if [ "x$JAVA_LIBRARY_PATH" != "x" ]; then
+    JAVA_LIBRARY_PATH=${JAVA_LIBRARY_PATH}:${AIME_HOME}/files/aimefiles/native
+  else
+    JAVA_LIBRARY_PATH=${AIME_HOME}/files/aimefiles/native
+  fi
+fi
+if [ "x$JAVA_LIBRARY_PATH" != "x" ]; then
+  AIME_OPTS="$AIME_OPTS -Djava.library.path=$JAVA_LIBRARY_PATH"
+fi
+
+# Main class:
+CLASS="io.aime.kernel.Kernel"
+
+# Debug info:
+# echo "# Command: $JAVA" $JAVA_HEAP_MAX $AIME_OPTS -classpath "$CLASSPATH" $CLASS
+
+# Run AIME:
+exec "$JAVA" $JAVA_HEAP_MAX $AIME_OPTS -classpath "$CLASSPATH" $CLASS "1" &>/dev/null &

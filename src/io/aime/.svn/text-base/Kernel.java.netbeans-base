@@ -1,0 +1,69 @@
+package io.aime;
+
+// AIME
+import io.aime.mvc.controller.KernelController;
+import io.aime.mvc.model.KernelIndexServerTableModel;
+import io.aime.mvc.model.KernelSegmentServerTableModel;
+import io.aime.mvc.view.KernelViewPanel;
+
+// AWT
+import java.awt.Dimension;
+import java.awt.EventQueue;
+
+// Swing
+import javax.swing.BoxLayout;
+import javax.swing.JFrame;
+import javax.swing.WindowConstants;
+
+// Util
+import java.util.ResourceBundle;
+
+public class Kernel extends JFrame {
+
+    private static Kernel _INSTANCE;
+
+    private Kernel() {
+        initComponents();
+    }
+
+    public static void build() {
+        if (_INSTANCE != null) {
+            if (!_INSTANCE.isVisible()) {
+                _INSTANCE.setVisible(true);
+            }
+            else {
+                _INSTANCE.toFront(); // Bring opened one to front.
+            }
+        }
+        else { // Create a new window.
+            EventQueue.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    KernelController controller = new KernelController();
+                    controller.addTableModel(new KernelIndexServerTableModel());
+                    controller.addTableModel(new KernelSegmentServerTableModel());
+
+                    _INSTANCE = new Kernel();
+                    _INSTANCE.add(new KernelViewPanel(controller));
+                    _INSTANCE.setLocationRelativeTo(Main.getInstance());
+                    _INSTANCE.setVisible(true);
+                }
+            });
+        }
+    }
+
+    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
+    private void initComponents() {
+
+        setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+        ResourceBundle bundle = ResourceBundle.getBundle("io/aime/Bundle"); // NOI18N
+        setTitle(bundle.getString("Kernel.title")); // NOI18N
+        setName("Form"); // NOI18N
+        setPreferredSize(new Dimension(600, 360));
+        getContentPane().setLayout(new BoxLayout(getContentPane(), BoxLayout.LINE_AXIS));
+
+        pack();
+    }// </editor-fold>//GEN-END:initComponents
+    // Variables declaration - do not modify//GEN-BEGIN:variables
+    // End of variables declaration//GEN-END:variables
+}

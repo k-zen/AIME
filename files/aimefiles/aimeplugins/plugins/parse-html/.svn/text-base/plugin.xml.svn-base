@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<plugin id="parse-html">
+    <requires>
+        <import plugin="aime-extensionpoints"/>
+    </requires>
+    <extension id="HtmlParser" point="io.aime.parse.Parser">
+        <implementation id="HtmlParser" class="io.aime.plugins.parsehtml.HtmlParser">
+            <parameter name="contentType" value="text/html"/>
+            <parameter name="pathSuffix" value=""/>
+        </implementation>
+    </extension>
+</plugin>

@@ -1,0 +1,398 @@
+package io.aime;
+
+// AIME
+import io.aime.cerebellum.data.CerebellumDHI;
+import io.aime.util.HtmlMessageBuilder;
+import io.aime.util.LookFeel;
+
+// AWT
+import java.awt.BorderLayout;
+import java.awt.Dimension;
+import java.awt.EventQueue;
+import java.awt.Font;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+
+// Swing
+import javax.swing.BorderFactory;
+import javax.swing.BoxLayout;
+import javax.swing.JPanel;
+import javax.swing.SwingConstants;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JTable;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
+import javax.swing.ScrollPaneConstants;
+import javax.swing.WindowConstants;
+import javax.swing.border.TitledBorder;
+import javax.swing.table.DefaultTableModel;
+
+// Util
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.ResourceBundle;
+import java.util.TreeMap;
+
+public class SeedServer extends JFrame {
+
+    private static JFrame thisFrame = null;
+    private io.aime.util.SeedServer model = new io.aime.util.SeedServer();
+    private Initiator initiator = new Initiator();
+    private Utilities utilities;
+
+    private SeedServer() {
+        this.initiator.initHandlers();
+        this.initiator.init();
+    }
+
+    private class Initiator {
+
+        void initHandlers() {
+            SeedServer.this.utilities = new Utilities();
+        }
+
+        void init() {
+            // Build the window.
+            SeedServer.this.initComponents();
+            // Load seeds into table.
+            SeedServer.this.utilities.loadSeedsTable();
+        }
+    }
+
+    private class Utilities {
+
+        void loadSeedsTable() {
+            // Set the rows to zero.
+            ((DefaultTableModel) SeedServer.this.seedsTable.getModel()).setRowCount(0);
+
+            TreeMap<String, TreeMap<String, String>> seeds = (TreeMap<String, TreeMap<String, String>>) new CerebellumDHI().obtainLocalData(
+                    CerebellumDHI.AIME_METADATA,
+                    CerebellumDHI.SEEDS_DATA).get();
+
+            Iterator<Entry<String, TreeMap<String, String>>> it = seeds.entrySet().iterator();
+            int counter = 0;
+            while (it.hasNext()) {
+                Entry<String, TreeMap<String, String>> e = it.next();
+                String key = e.getKey();
+                Map<String, String> value = e.getValue();
+
+                String url = value.get("url");
+                String score = value.get("score");
+                String fetchInterval = value.get("fetchinterval") + " seconds";
+
+                Object[] rowData = new Object[]{
+                    new JLabel(url),
+                    new JLabel(score, JLabel.CENTER),
+                    new JLabel(fetchInterval, JLabel.CENTER),
+                    false,
+                    false
+                };
+
+                // Insert the new row.
+                ((DefaultTableModel) SeedServer.this.seedsTable.getModel()).insertRow(counter, rowData);
+                counter++;
+            }
+        }
+    }
+
+    public static void build() {
+        if (SeedServer.thisFrame != null) {
+            if (!SeedServer.thisFrame.isVisible()) {
+                SeedServer.thisFrame.setVisible(true);
+            }
+            else {
+                SeedServer.thisFrame.toFront(); // Bring opened one to front.
+            }
+        }
+        else { // Create a new window.
+            EventQueue.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    SeedServer.thisFrame = new SeedServer();
+                    SeedServer.thisFrame.setLocationRelativeTo(Main.thisFrame);
+                    SeedServer.thisFrame.setVisible(true);
+                }
+            });
+        }
+    }
+
+  private void initComponents() {//GEN-BEGIN:initComponents
+
+    containerPanel = new JPanel();
+    tablePanel = new JPanel();
+    seedsScrollPane = new JScrollPane();
+    seedsTable = new JTable();
+    buttonsPanel = new JPanel();
+    importSeedsButton = new JButton();
+    addSeedButton = new JButton();
+    removeSeedButton = new JButton();
+    helpButton = new JButton();
+    FormListener formListener = new FormListener (); 
+
+    setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+    ResourceBundle bundle = ResourceBundle.getBundle ("io/aime/Bundle"); // NOI18N
+    setTitle(bundle.getString("SeedServer.title")); // NOI18N
+    setName("Form"); // NOI18N
+    getContentPane().setLayout(new BoxLayout(getContentPane(), BoxLayout.LINE_AXIS));
+
+    containerPanel.setBorder(BorderFactory.createTitledBorder(LookFeel.getDefaultBorder (), bundle.getString("SeedServer.containerPanel.border.title"), TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION, LookFeel.getFont (true, 1))); // NOI18N
+    containerPanel.setName("containerPanel"); // NOI18N
+    containerPanel.setLayout(new BorderLayout());
+
+    tablePanel.setName("tablePanel"); // NOI18N
+    tablePanel.setLayout(new BoxLayout(tablePanel, BoxLayout.LINE_AXIS));
+
+    seedsScrollPane.setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4));
+    seedsScrollPane.setName("seedsScrollPane"); // NOI18N
+
+    seedsTable.setModel(new DefaultTableModel(
+      new Object [][] {
+        {null, null, null, null, null},
+        {null, null, null, null, null},
+        {null, null, null, null, null},
+        {null, null, null, null, null}
+      },
+      new String [] {
+        "Site", "Init. Score", "Fetch Interval", "Master Seed", "Remove"
+      }
+    ) {
+      Class[] types = new Class [] {
+        Object.class, Object.class, Object.class, Boolean.class, Boolean.class
+      };
+      boolean[] canEdit = new boolean [] {
+        false, false, false, true, true
+      };
+
+      public Class getColumnClass(int columnIndex) {
+        return types [columnIndex];
+      }
+
+      public boolean isCellEditable(int rowIndex, int columnIndex) {
+        return canEdit [columnIndex];
+      }
+    });
+    seedsTable.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
+    seedsTable.setName("seedsTable"); // NOI18N
+    seedsTable.getTableHeader().setReorderingAllowed(false);
+    seedsScrollPane.setViewportView(seedsTable);
+    seedsTable.getColumnModel().getColumn(0).setHeaderValue(bundle.getString("SeedServer.seedsTable.columnModel.title0")); // NOI18N
+    seedsTable.getColumnModel().getColumn(0).setCellRenderer(null);
+    seedsTable.getColumnModel().getColumn(1).setHeaderValue(bundle.getString("SeedServer.seedsTable.columnModel.title1")); // NOI18N
+    seedsTable.getColumnModel().getColumn(1).setCellRenderer(null);
+    seedsTable.getColumnModel().getColumn(2).setHeaderValue(bundle.getString("SeedServer.seedsTable.columnModel.title2")); // NOI18N
+    seedsTable.getColumnModel().getColumn(2).setCellRenderer(null);
+    seedsTable.getColumnModel().getColumn(3).setHeaderValue(bundle.getString("SeedServer.seedsTable.columnModel.title3")); // NOI18N
+    seedsTable.getColumnModel().getColumn(4).setHeaderValue(bundle.getString("SeedServer.seedsTable.columnModel.title4")); // NOI18N
+
+    tablePanel.add(seedsScrollPane);
+
+    containerPanel.add(tablePanel, BorderLayout.CENTER);
+
+    buttonsPanel.setName("buttonsPanel"); // NOI18N
+
+    importSeedsButton.setFont(importSeedsButton.getFont().deriveFont(importSeedsButton.getFont().getStyle() | Font.BOLD, 10));
+    importSeedsButton.setText(bundle.getString("SeedServer.importSeedsButton.text")); // NOI18N
+    importSeedsButton.setName("importSeedsButton"); // NOI18N
+    importSeedsButton.addActionListener(formListener);
+    buttonsPanel.add(importSeedsButton);
+
+    addSeedButton.setFont(addSeedButton.getFont().deriveFont(addSeedButton.getFont().getStyle() | Font.BOLD, 10));
+    addSeedButton.setText(bundle.getString("SeedServer.addSeedButton.text")); // NOI18N
+    addSeedButton.setName("addSeedButton"); // NOI18N
+    addSeedButton.addActionListener(formListener);
+    buttonsPanel.add(addSeedButton);
+
+    removeSeedButton.setFont(removeSeedButton.getFont().deriveFont(removeSeedButton.getFont().getStyle() | Font.BOLD, 10));
+    removeSeedButton.setText(bundle.getString("SeedServer.removeSeedButton.text")); // NOI18N
+    removeSeedButton.setName("removeSeedButton"); // NOI18N
+    removeSeedButton.addActionListener(formListener);
+    buttonsPanel.add(removeSeedButton);
+
+    helpButton.setFont(helpButton.getFont().deriveFont(helpButton.getFont().getStyle() | Font.BOLD, 10));
+    helpButton.setText(bundle.getString("SeedServer.helpButton.text")); // NOI18N
+    helpButton.setName("helpButton"); // NOI18N
+    helpButton.addActionListener(formListener);
+    buttonsPanel.add(helpButton);
+
+    containerPanel.add(buttonsPanel, BorderLayout.PAGE_END);
+
+    getContentPane().add(containerPanel);
+
+    pack();
+  }
+
+  // Code for dispatching events from components to event handlers.
+
+  private class FormListener implements ActionListener {
+    FormListener() {}
+    public void actionPerformed(ActionEvent evt) {
+      if (evt.getSource() == importSeedsButton) {
+        SeedServer.this.importSeedsButtonActionPerformed(evt);
+      }
+      else if (evt.getSource() == addSeedButton) {
+        SeedServer.this.addSeedButtonActionPerformed(evt);
+      }
+      else if (evt.getSource() == removeSeedButton) {
+        SeedServer.this.removeSeedButtonActionPerformed(evt);
+      }
+      else if (evt.getSource() == helpButton) {
+        SeedServer.this.helpButtonActionPerformed(evt);
+      }
+    }
+  }//GEN-END:initComponents
+
+  private void addSeedButtonActionPerformed (ActionEvent evt) {//GEN-FIRST:event_addSeedButtonActionPerformed
+      String msg = HtmlMessageBuilder.buildOnlyOneParagraphMsg(
+              "Please enter the URL in the box bellow.<br/>"
+              + "<u>Example:</u><br/>"
+              + "http://www.example.com (For HTTP Protocol.)<br/>"
+              + "file:///Users/user (For File Protocol)<br/>"
+              + "smb://127.0.0.1/user/folder (For File Server Protocol)");
+      String userInput = JOptionPane.showInputDialog(SeedServer.thisFrame, msg, "Enter URL", JOptionPane.PLAIN_MESSAGE);
+
+      if (userInput == null || userInput.isEmpty()) {
+          return;
+      }
+
+      // Add seed to dbase.
+      SeedServer.this.model.updateSeeds(userInput);
+      // Reload the seeds table.
+      SeedServer.this.utilities.loadSeedsTable();
+  }//GEN-LAST:event_addSeedButtonActionPerformed
+
+  private void importSeedsButtonActionPerformed (ActionEvent evt) {//GEN-FIRST:event_importSeedsButtonActionPerformed
+      final JTextArea textArea = new JTextArea();
+      // Enable use of custom set fonts
+      textArea.setEditable(true);
+      textArea.setText("");
+      textArea.setLineWrap(false);
+      textArea.setWrapStyleWord(false);
+      textArea.setCaretPosition(0);
+      textArea.setFont(LookFeel.getFont(true, -1));
+
+      final JFrame frame = new JFrame("Import Seeds");
+      frame.getContentPane().setLayout(new BorderLayout());
+
+      final JLabel textLabel = new JLabel();
+      textLabel.setHorizontalAlignment(SwingConstants.LEADING);
+      textLabel.setText(HtmlMessageBuilder.buildHTMLMsg(
+              "<table>"
+              + "<tr>"
+              + "<td>"
+              + "<span class=\"subtitle\">Format:</span> URL, Init. Score, Fetch Interval"
+              + "</td>"
+              + "</tr>"
+              + "<tr>"
+              + "<td>"
+              + "<ul>"
+              + "<li><span class=\"subtitle\">1.</span> Use one line per URL.</li>"
+              + "<li><span class=\"subtitle\">2.</span> Separate the different values with comas.</li>"
+              + "</ul>"
+              + "</td>"
+              + "</tr>"
+              + "</table>"));
+
+      final JPanel textPanel = new JPanel();
+      textPanel.setLayout(new BoxLayout(textPanel, BoxLayout.X_AXIS));
+      textPanel.setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4));
+      textPanel.add(textLabel);
+
+      final JButton importButton = new JButton("Import");
+      importButton.setFont(importButton.getFont().deriveFont(importButton.getFont().getStyle() | java.awt.Font.BOLD, 10));
+      importButton.addActionListener(new java.awt.event.ActionListener() {
+          @Override
+          public void actionPerformed(java.awt.event.ActionEvent evt) {
+              if (!textArea.getText().isEmpty()) {
+                  // Call importSeeds() on the model and pass the Map.
+                  SeedServer.this.model.importSeeds(SeedServer.this.model.parseSeeds(textArea.getText()));
+                  // Reload the seeds table.
+                  SeedServer.this.utilities.loadSeedsTable();
+                  // Close the window.
+                  frame.dispose();
+              }
+          }
+      });
+
+      final JPanel buttonPanel = new JPanel();
+      buttonPanel.setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4));
+      buttonPanel.add(importButton);
+
+      final JPanel topPanel = new JPanel();
+      topPanel.setLayout(new BorderLayout());
+      topPanel.add(textPanel, BorderLayout.WEST);
+      topPanel.add(buttonPanel, BorderLayout.EAST);
+
+      final JScrollPane scrollPane = new JScrollPane(textArea);
+      scrollPane.setPreferredSize(new Dimension(500, 400));
+      scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+      scrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
+      scrollPane.setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4));
+
+      // Build the frame
+      frame.add(topPanel, BorderLayout.NORTH);
+      frame.add(scrollPane, BorderLayout.CENTER);
+      frame.pack();
+      frame.setLocationRelativeTo(SeedServer.thisFrame);
+      frame.setVisible(true);
+  }//GEN-LAST:event_importSeedsButtonActionPerformed
+
+  private void helpButtonActionPerformed(ActionEvent evt) {//GEN-FIRST:event_helpButtonActionPerformed
+      // TODO add your handling code here:
+  }//GEN-LAST:event_helpButtonActionPerformed
+
+  private void removeSeedButtonActionPerformed(ActionEvent evt) {//GEN-FIRST:event_removeSeedButtonActionPerformed
+      // Traverse all rows, to see if a seed has been marked for deletion.
+      int selected = 0;
+      for (int k = 0; k < this.seedsTable.getRowCount(); k++) {
+          if ((Boolean) this.seedsTable.getValueAt(k, 4)) {
+              selected++;
+          }
+      }
+
+      // If there are seeds marked for removal, then ask the user if he wants to continue.
+      if (selected > 0) {
+          // Ask the user.
+          int response = JOptionPane.showConfirmDialog(
+                  SeedServer.thisFrame,
+                  HtmlMessageBuilder.buildOnlyOneParagraphMsg("Are you sure you want to do this...?"),
+                  "Delete Seeds Confirmation",
+                  JOptionPane.YES_NO_OPTION,
+                  JOptionPane.QUESTION_MESSAGE,
+                  LookFeel.getIcon("Question.png"));
+          if (response == JOptionPane.YES_OPTION) {
+              // Traverser again the seeds, and remove the ones that are marked.
+              for (int k = 0; k < this.seedsTable.getRowCount(); k++) {
+                  if ((Boolean) this.seedsTable.getValueAt(k, 4)) {
+                      // Delete seed from dbase.
+                      SeedServer.this.model.deleteSeeds(((JLabel) this.seedsTable.getValueAt(k, 0)).getText());
+                  }
+              }
+              // Reload the seeds table.
+              SeedServer.this.utilities.loadSeedsTable();
+          }
+      }
+      else {
+          JOptionPane.showMessageDialog(
+                  SeedServer.thisFrame,
+                  HtmlMessageBuilder.buildOnlyOneParagraphMsg("First select the seeds you want to remove."),
+                  "Info",
+                  JOptionPane.INFORMATION_MESSAGE,
+                  LookFeel.getIcon("Info.png"));
+      }
+  }//GEN-LAST:event_removeSeedButtonActionPerformed
+  // Variables declaration - do not modify//GEN-BEGIN:variables
+  private JButton addSeedButton;
+  private JPanel buttonsPanel;
+  private JPanel containerPanel;
+  private JButton helpButton;
+  private JButton importSeedsButton;
+  private JButton removeSeedButton;
+  private JScrollPane seedsScrollPane;
+  private JTable seedsTable;
+  private JPanel tablePanel;
+  // End of variables declaration//GEN-END:variables
+}

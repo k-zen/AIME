@@ -1,0 +1,80 @@
+package io.aime;
+
+// AIME
+import io.aime.mvc.controller.SeedsController;
+import io.aime.mvc.model.SeedsTableModel;
+import io.aime.mvc.view.SeedsViewPanel;
+
+// AWT
+import java.awt.EventQueue;
+
+// Swing
+import javax.swing.BoxLayout;
+import javax.swing.JFrame;
+import javax.swing.WindowConstants;
+
+/**
+ * Window for interacting with the seeds.
+ *
+ * @see Singleton Pattern
+ *
+ * @author K-Zen
+ */
+public class SeedServerWindow extends JFrame {
+
+    private static SeedServerWindow _INSTANCE;
+    SeedsController controller;
+    SeedsViewPanel view;
+
+    static SeedServerWindow getInstance() {
+        return _INSTANCE;
+    }
+
+    private SeedServerWindow() {
+        initComponents();
+    }
+
+    private void buildWindow() {
+        controller = new SeedsController();
+        controller.addTableModel(new SeedsTableModel());
+        view = new SeedsViewPanel(controller);
+        controller.addView(view);
+        _INSTANCE.add(view);
+        _INSTANCE.setLocationRelativeTo(MainWindow.getInstance());
+        _INSTANCE.setVisible(true);
+        _INSTANCE.pack();
+    }
+
+    public static void build() {
+        if (_INSTANCE != null) {
+            if (!_INSTANCE.isVisible()) {
+                _INSTANCE.setVisible(true);
+            }
+            else {
+                _INSTANCE.toFront();
+            }
+        }
+        else {
+            EventQueue.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    _INSTANCE = new SeedServerWindow();
+                    _INSTANCE.buildWindow();
+                }
+            });
+        }
+    }
+
+    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
+    private void initComponents() {
+
+        setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+        setTitle("Seeds Management");
+        setName("Form"); // NOI18N
+        getContentPane().setLayout(new BoxLayout(getContentPane(), BoxLayout.LINE_AXIS));
+
+        pack();
+    }// </editor-fold>//GEN-END:initComponents
+    // Variables declaration - do not modify//GEN-BEGIN:variables
+    // End of variables declaration//GEN-END:variables
+}

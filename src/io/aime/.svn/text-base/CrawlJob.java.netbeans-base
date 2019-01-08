@@ -1,0 +1,784 @@
+package io.aime;
+
+// AIME
+import io.aime.cerebellum.data.CerebellumDHI;
+import io.aime.util.AIMEConstants;
+import io.aime.util.HtmlMessageBuilder;
+import io.aime.util.LookFeel;
+
+// Apache Commons
+import org.apache.commons.lang.math.NumberUtils;
+
+// AWT
+import java.awt.BorderLayout;
+import java.awt.EventQueue;
+import java.awt.Font;
+import java.awt.GridLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+
+// Util
+import java.util.ResourceBundle;
+
+// Log4j
+import org.apache.log4j.Logger;
+
+// Swing
+import javax.swing.BorderFactory;
+import javax.swing.BoxLayout;
+import javax.swing.GroupLayout;
+import javax.swing.GroupLayout.Alignment;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JPanel;
+import javax.swing.JSeparator;
+import javax.swing.JTextField;
+import javax.swing.LayoutStyle.ComponentPlacement;
+import javax.swing.SwingConstants;
+import javax.swing.WindowConstants;
+import javax.swing.border.TitledBorder;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.Timer;
+
+// Util
+import java.util.concurrent.TimeUnit;
+
+public class CrawlJob extends JFrame {
+
+    private final static Logger LOG = Logger.getLogger(CrawlJob.class.getName());
+    private static final int UPDATE_INTERVAL = 1000;
+    private static CrawlJob thisFrame;
+    private UpdateTimeLabel uLabel;
+    private UpdateRunningFunctionLabel rLabel;
+    private UpdateDepthLabel dLabel;
+    private Thread jobLauncher;
+    private boolean isResumeGlobal = false;
+    private int startFromDepth = 0;
+    private io.aime.crawl.CrawlJob model = new io.aime.crawl.CrawlJob();
+    private Initiator initiator = new Initiator();
+    private Utilities utilities;
+
+    private CrawlJob(boolean isResume) {
+        this.initiator.initHandlers();
+        this.initiator.init(isResume);
+    }
+
+    private class Initiator {
+
+        void initHandlers() {
+            CrawlJob.this.utilities = new Utilities();
+        }
+
+        void init(boolean isResume) {
+            // Mark all flags as resume mode.
+            if (isResume) {
+                // Check if we can enter resume mode.
+                if (CrawlJob.this.model.jobExists((Integer) new CerebellumDHI().obtainLocalData(
+                        CerebellumDHI.AIME_METADATA,
+                        CerebellumDHI.AIME_EXECUTION_TYPE_DATA).get())) {
+                    CrawlJob.this.isResumeGlobal = isResume;
+                    CrawlJob.this.model.setResumeMode();
+                    CrawlJob.this.startFromDepth = CrawlJob.this.model.getPreviousLevelsCount();
+                }
+                // Notify that resume mode is not capable.
+                else {
+                    JOptionPane.showMessageDialog(
+                            CrawlJob.thisFrame,
+                            HtmlMessageBuilder.buildOnlyOneParagraphMsg(AIMEConstants.JOB_RESUME_PREVIOUS_JOB_ERROR.getStringConstant()),
+                            "Warning",
+                            JOptionPane.WARNING_MESSAGE,
+                            LookFeel.getIcon("Alert.png"));
+                }
+            }
+
+            // Build the window.
+            CrawlJob.this.initComponents();
+            // Updaters.
+            CrawlJob.this.uLabel = new UpdateTimeLabel(CrawlJob.this.timeLabel);
+            CrawlJob.this.rLabel = new UpdateRunningFunctionLabel(CrawlJob.this.runningFunctionInfoLabel);
+            CrawlJob.this.dLabel = new UpdateDepthLabel(CrawlJob.this.currentDepthInfoLabel);
+            CrawlJob.this.utilities.startRunningFunctionLabelUpdater();
+            CrawlJob.this.utilities.startCurrentDepthLabelUpdater();
+        }
+    }
+
+    private class Utilities {
+
+        void startTimeLabelUpdater() {
+            try {
+                CrawlJob.this.uLabel.start();
+            }
+            catch (Exception e) {
+                LOG.error("Error starting updater thread. Error: " + e.toString(), e);
+            }
+        }
+
+        void stopTimeLabelUpdater() {
+            try {
+                CrawlJob.this.uLabel.stop();
+            }
+            catch (Exception e) {
+                LOG.error("Error stopping updater thread.");
+            }
+        }
+
+        void startRunningFunctionLabelUpdater() {
+            try {
+                CrawlJob.this.rLabel.start();
+            }
+            catch (Exception e) {
+                LOG.error("Error starting updater thread.");
+            }
+        }
+
+        void stopRunningFunctionLabelUpdater() {
+            try {
+                CrawlJob.this.rLabel.stop();
+            }
+            catch (Exception e) {
+                LOG.error("Error stopping updater thread.");
+            }
+        }
+
+        void startCurrentDepthLabelUpdater() {
+            try {
+                CrawlJob.this.dLabel.start();
+            }
+            catch (Exception e) {
+                LOG.error("Error starting updater thread.");
+            }
+        }
+
+        void stopCurrentDepthLabelUpdater() {
+            try {
+                CrawlJob.this.dLabel.stop();
+            }
+            catch (Exception e) {
+                LOG.error("Error stopping updater thread.");
+            }
+        }
+    }
+
+    public static void build(final boolean isResume) {
+        if (CrawlJob.thisFrame != null) {
+            if (!CrawlJob.thisFrame.isVisible()) {
+                CrawlJob.thisFrame = null;
+                CrawlJob.build(isResume); // Construct a new window. Don't re-use the old one.
+            }
+            else {
+                CrawlJob.thisFrame.toFront(); // Bring opened one to front.
+            }
+        }
+        else { // Create a new window.
+            EventQueue.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    CrawlJob.thisFrame = new CrawlJob(isResume);
+                    CrawlJob.thisFrame.setLocationRelativeTo(Main.thisFrame);
+                    CrawlJob.thisFrame.setVisible(true);
+                    // Override the default frame close method.
+                    CrawlJob.thisFrame.addWindowListener(new WindowAdapter() {
+                        @Override
+                        public void windowClosing(WindowEvent e) {
+                            CrawlJob.thisFrame.exitButtonActionPerformed(null);
+                        }
+                    });
+                }
+            });
+        }
+    }
+
+    private class UpdateTimeLabel extends Timer implements ActionListener {
+
+        private JLabel label;
+
+        private UpdateTimeLabel(JLabel label) {
+            super(UPDATE_INTERVAL, null);
+            super.addActionListener(this);
+            this.label = label;
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent event) {
+            long executionTime = CrawlJob.this.model.getExecutionTime();
+            long days = TimeUnit.MILLISECONDS.toDays(executionTime);
+            long hours = TimeUnit.MILLISECONDS.toHours(executionTime) - TimeUnit.DAYS.toHours(TimeUnit.MILLISECONDS.toDays(executionTime));
+            long minutes = TimeUnit.MILLISECONDS.toMinutes(executionTime) - TimeUnit.HOURS.toMinutes(TimeUnit.MILLISECONDS.toHours(executionTime));
+            long seconds = TimeUnit.MILLISECONDS.toSeconds(executionTime) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(executionTime));
+
+            this.label.setText(String.format("%03d : %02d : %02d : %02d", days, hours, minutes, seconds));
+            CrawlJob.this.repaint();
+        }
+    }
+
+    private class UpdateRunningFunctionLabel extends Timer implements ActionListener {
+
+        private JLabel label;
+
+        private UpdateRunningFunctionLabel(JLabel label) {
+            super(UPDATE_INTERVAL, null);
+            super.addActionListener(this);
+            this.label = label;
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent event) {
+            this.label.setText(CrawlJob.this.model.getCurrentRunningFunction());
+            CrawlJob.this.repaint();
+        }
+    }
+
+    private class UpdateDepthLabel extends Timer implements ActionListener {
+
+        private JLabel label;
+
+        private UpdateDepthLabel(JLabel label) {
+            super(UPDATE_INTERVAL, null);
+            super.addActionListener(this);
+            this.label = label;
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent event) {
+            this.label.setText(String.valueOf(CrawlJob.this.model.getCurrentDepth()));
+            CrawlJob.this.repaint();
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
+    private void initComponents() {
+
+        containerPanel = new JPanel();
+        mainPanel = new JPanel();
+        depthTextField = new JTextField();
+        depthLabel = new JLabel();
+        sendReportsCheckBox = new JCheckBox();
+        sendReportsLabel = new JLabel();
+        buttonsPanel = new JPanel();
+        launchJobButton = new JButton();
+        pauseButton = new JButton();
+        killButton = new JButton();
+        exitButton = new JButton();
+        resumeButton = new JButton();
+        sep1 = new JSeparator();
+        executionTimePanel = new JPanel();
+        timeLabel = new JLabel();
+        optionsPanel = new JPanel();
+        crawlOption1CheckBox = new JCheckBox();
+        indicatorsPanel = new JPanel();
+        runningFunctionLabel = new JLabel();
+        runningFunctionInfoLabel = new JLabel();
+        currentDepthLabel = new JLabel();
+        currentDepthInfoLabel = new JLabel();
+
+        FormListener formListener = new FormListener();
+
+        setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
+        ResourceBundle bundle = ResourceBundle.getBundle("io/aime/Bundle"); // NOI18N
+        setTitle(bundle.getString("CrawlJob.title")); // NOI18N
+        setName("Form"); // NOI18N
+        setResizable(false);
+        getContentPane().setLayout(new BoxLayout(getContentPane(), BoxLayout.LINE_AXIS));
+
+        containerPanel.setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4));
+        containerPanel.setName("containerPanel"); // NOI18N
+        containerPanel.setLayout(new BorderLayout());
+
+        mainPanel.setBorder(BorderFactory.createTitledBorder(LookFeel.getDefaultBorder (), bundle.getString("CrawlJob.mainPanel.border.title"), TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION, LookFeel.getFont (true, 1))); // NOI18N
+        mainPanel.setName("mainPanel"); // NOI18N
+
+        depthTextField.setName("depthTextField"); // NOI18N
+        depthTextField.addKeyListener(formListener);
+
+        depthLabel.setFont(depthLabel.getFont().deriveFont(depthLabel.getFont().getStyle() | Font.BOLD, 10));
+        depthLabel.setText("Depth (Previous "+this.startFromDepth+")");
+        depthLabel.setName("depthLabel"); // NOI18N
+
+        sendReportsCheckBox.setFont(sendReportsCheckBox.getFont().deriveFont(sendReportsCheckBox.getFont().getStyle() | Font.BOLD, 10));
+        sendReportsCheckBox.setText(bundle.getString("CrawlJob.sendReportsCheckBox.text")); // NOI18N
+        sendReportsCheckBox.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 0));
+        sendReportsCheckBox.setName("sendReportsCheckBox"); // NOI18N
+
+        sendReportsLabel.setFont(sendReportsLabel.getFont().deriveFont(sendReportsLabel.getFont().getStyle() | Font.BOLD, 10));
+        sendReportsLabel.setText(bundle.getString("CrawlJob.sendReportsLabel.text")); // NOI18N
+        sendReportsLabel.setName("sendReportsLabel"); // NOI18N
+
+        buttonsPanel.setName("buttonsPanel"); // NOI18N
+        buttonsPanel.setLayout(new GridLayout(3, 2, 4, 4));
+
+        launchJobButton.setFont(launchJobButton.getFont().deriveFont(launchJobButton.getFont().getStyle() | Font.BOLD, 10));
+        launchJobButton.setText((this.isResumeGlobal)?"Resume Previous Job":"Launch New Job");
+        launchJobButton.setName("launchJobButton"); // NOI18N
+        launchJobButton.addActionListener(formListener);
+        buttonsPanel.add(launchJobButton);
+
+        pauseButton.setFont(pauseButton.getFont().deriveFont(pauseButton.getFont().getStyle() | Font.BOLD, 10));
+        pauseButton.setText(bundle.getString("CrawlJob.pauseButton.text")); // NOI18N
+        pauseButton.setName("pauseButton"); // NOI18N
+        pauseButton.addActionListener(formListener);
+        buttonsPanel.add(pauseButton);
+
+        killButton.setFont(killButton.getFont().deriveFont(killButton.getFont().getStyle() | Font.BOLD, 10));
+        killButton.setText(bundle.getString("CrawlJob.killButton.text")); // NOI18N
+        killButton.setName("killButton"); // NOI18N
+        killButton.addActionListener(formListener);
+        buttonsPanel.add(killButton);
+
+        exitButton.setFont(exitButton.getFont().deriveFont(exitButton.getFont().getStyle() | Font.BOLD, 10));
+        exitButton.setText(bundle.getString("CrawlJob.exitButton.text")); // NOI18N
+        exitButton.setName("exitButton"); // NOI18N
+        exitButton.addActionListener(formListener);
+        buttonsPanel.add(exitButton);
+
+        resumeButton.setFont(resumeButton.getFont().deriveFont(resumeButton.getFont().getStyle() | Font.BOLD, 10));
+        resumeButton.setText(bundle.getString("CrawlJob.resumeButton.text")); // NOI18N
+        resumeButton.setName("resumeButton"); // NOI18N
+        resumeButton.addActionListener(formListener);
+        buttonsPanel.add(resumeButton);
+
+        sep1.setName("sep1"); // NOI18N
+
+        GroupLayout mainPanelLayout = new GroupLayout(mainPanel);
+        mainPanel.setLayout(mainPanelLayout);
+        mainPanelLayout.setHorizontalGroup(
+            mainPanelLayout.createParallelGroup(Alignment.LEADING)
+            .addComponent(buttonsPanel, Alignment.TRAILING, GroupLayout.DEFAULT_SIZE, 241, Short.MAX_VALUE)
+            .addGroup(mainPanelLayout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(mainPanelLayout.createParallelGroup(Alignment.LEADING)
+                    .addGroup(mainPanelLayout.createSequentialGroup()
+                        .addGroup(mainPanelLayout.createParallelGroup(Alignment.LEADING)
+                            .addComponent(sendReportsLabel)
+                            .addComponent(depthLabel))
+                        .addGap(19, 19, 19)
+                        .addGroup(mainPanelLayout.createParallelGroup(Alignment.LEADING, false)
+                            .addComponent(sendReportsCheckBox, GroupLayout.DEFAULT_SIZE, 112, Short.MAX_VALUE)
+                            .addComponent(depthTextField))
+                        .addGap(0, 0, Short.MAX_VALUE))
+                    .addComponent(sep1))
+                .addContainerGap())
+        );
+        mainPanelLayout.setVerticalGroup(
+            mainPanelLayout.createParallelGroup(Alignment.LEADING)
+            .addGroup(mainPanelLayout.createSequentialGroup()
+                .addGroup(mainPanelLayout.createParallelGroup(Alignment.BASELINE)
+                    .addComponent(depthTextField, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+                    .addComponent(depthLabel))
+                .addPreferredGap(ComponentPlacement.RELATED)
+                .addGroup(mainPanelLayout.createParallelGroup(Alignment.BASELINE)
+                    .addComponent(sendReportsCheckBox)
+                    .addComponent(sendReportsLabel))
+                .addPreferredGap(ComponentPlacement.RELATED)
+                .addComponent(sep1, GroupLayout.PREFERRED_SIZE, 10, GroupLayout.PREFERRED_SIZE)
+                .addGap(0, 0, 0)
+                .addComponent(buttonsPanel, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+                .addGap(0, 0, 0))
+        );
+
+        containerPanel.add(mainPanel, BorderLayout.CENTER);
+
+        executionTimePanel.setBorder(BorderFactory.createTitledBorder(LookFeel.getDefaultBorder (), bundle.getString("CrawlJob.executionTimePanel.border.title"), TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION, LookFeel.getFont (true, 1))); // NOI18N
+        executionTimePanel.setName("executionTimePanel"); // NOI18N
+        executionTimePanel.setLayout(new BorderLayout());
+
+        timeLabel.setFont(timeLabel.getFont().deriveFont(timeLabel.getFont().getStyle() | Font.BOLD, 20));
+        timeLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        timeLabel.setText(bundle.getString("CrawlJob.timeLabel.text")); // NOI18N
+        timeLabel.setName("timeLabel"); // NOI18N
+        executionTimePanel.add(timeLabel, BorderLayout.CENTER);
+
+        containerPanel.add(executionTimePanel, BorderLayout.PAGE_START);
+
+        optionsPanel.setBorder(BorderFactory.createTitledBorder(LookFeel.getDefaultBorder (), bundle.getString("CrawlJob.optionsPanel.border.title"), TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION, LookFeel.getFont (true, 1))); // NOI18N
+        optionsPanel.setName("optionsPanel"); // NOI18N
+
+        crawlOption1CheckBox.setFont(crawlOption1CheckBox.getFont().deriveFont(crawlOption1CheckBox.getFont().getStyle() | Font.BOLD, 10));
+        crawlOption1CheckBox.setSelected(true);
+        crawlOption1CheckBox.setText(bundle.getString("CrawlJob.crawlOption1CheckBox.text")); // NOI18N
+        crawlOption1CheckBox.setName("crawlOption1CheckBox"); // NOI18N
+
+        GroupLayout optionsPanelLayout = new GroupLayout(optionsPanel);
+        optionsPanel.setLayout(optionsPanelLayout);
+        optionsPanelLayout.setHorizontalGroup(
+            optionsPanelLayout.createParallelGroup(Alignment.LEADING)
+            .addGroup(optionsPanelLayout.createSequentialGroup()
+                .addGap(0, 0, 0)
+                .addComponent(crawlOption1CheckBox)
+                .addGap(0, 0, 0))
+        );
+        optionsPanelLayout.setVerticalGroup(
+            optionsPanelLayout.createParallelGroup(Alignment.LEADING)
+            .addGroup(optionsPanelLayout.createSequentialGroup()
+                .addComponent(crawlOption1CheckBox)
+                .addGap(0, 140, Short.MAX_VALUE))
+        );
+
+        containerPanel.add(optionsPanel, BorderLayout.EAST);
+
+        indicatorsPanel.setBorder(BorderFactory.createTitledBorder(LookFeel.getDefaultBorder (), bundle.getString("CrawlJob.indicatorsPanel.border.title"), TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION, LookFeel.getFont (true, 1))); // NOI18N
+        indicatorsPanel.setName("indicatorsPanel"); // NOI18N
+
+        runningFunctionLabel.setFont(runningFunctionLabel.getFont().deriveFont(runningFunctionLabel.getFont().getStyle() | Font.BOLD, 11));
+        runningFunctionLabel.setText(bundle.getString("CrawlJob.runningFunctionLabel.text")); // NOI18N
+        runningFunctionLabel.setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4));
+        runningFunctionLabel.setName("runningFunctionLabel"); // NOI18N
+
+        runningFunctionInfoLabel.setFont(runningFunctionInfoLabel.getFont().deriveFont(runningFunctionInfoLabel.getFont().getStyle() | Font.BOLD, 10));
+        runningFunctionInfoLabel.setText(bundle.getString("CrawlJob.runningFunctionInfoLabel.text")); // NOI18N
+        runningFunctionInfoLabel.setName("runningFunctionInfoLabel"); // NOI18N
+
+        currentDepthLabel.setFont(currentDepthLabel.getFont().deriveFont(currentDepthLabel.getFont().getStyle() | Font.BOLD, 11));
+        currentDepthLabel.setText(bundle.getString("CrawlJob.currentDepthLabel.text")); // NOI18N
+        currentDepthLabel.setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4));
+        currentDepthLabel.setName("currentDepthLabel"); // NOI18N
+
+        currentDepthInfoLabel.setFont(currentDepthInfoLabel.getFont().deriveFont(currentDepthInfoLabel.getFont().getStyle() | Font.BOLD, 10));
+        currentDepthInfoLabel.setText(bundle.getString("CrawlJob.currentDepthInfoLabel.text")); // NOI18N
+        currentDepthInfoLabel.setName("currentDepthInfoLabel"); // NOI18N
+
+        GroupLayout indicatorsPanelLayout = new GroupLayout(indicatorsPanel);
+        indicatorsPanel.setLayout(indicatorsPanelLayout);
+        indicatorsPanelLayout.setHorizontalGroup(
+            indicatorsPanelLayout.createParallelGroup(Alignment.LEADING)
+            .addGroup(indicatorsPanelLayout.createSequentialGroup()
+                .addGroup(indicatorsPanelLayout.createParallelGroup(Alignment.TRAILING, false)
+                    .addComponent(currentDepthLabel, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(runningFunctionLabel, GroupLayout.DEFAULT_SIZE, 118, Short.MAX_VALUE))
+                .addGap(0, 0, 0)
+                .addGroup(indicatorsPanelLayout.createParallelGroup(Alignment.LEADING)
+                    .addComponent(runningFunctionInfoLabel, GroupLayout.DEFAULT_SIZE, 276, Short.MAX_VALUE)
+                    .addComponent(currentDepthInfoLabel, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addContainerGap())
+        );
+        indicatorsPanelLayout.setVerticalGroup(
+            indicatorsPanelLayout.createParallelGroup(Alignment.LEADING)
+            .addGroup(indicatorsPanelLayout.createSequentialGroup()
+                .addGroup(indicatorsPanelLayout.createParallelGroup(Alignment.BASELINE)
+                    .addComponent(runningFunctionLabel)
+                    .addComponent(runningFunctionInfoLabel, GroupLayout.PREFERRED_SIZE, 22, GroupLayout.PREFERRED_SIZE))
+                .addGroup(indicatorsPanelLayout.createParallelGroup(Alignment.BASELINE)
+                    .addComponent(currentDepthLabel)
+                    .addComponent(currentDepthInfoLabel, GroupLayout.PREFERRED_SIZE, 22, GroupLayout.PREFERRED_SIZE)))
+        );
+
+        containerPanel.add(indicatorsPanel, BorderLayout.PAGE_END);
+
+        getContentPane().add(containerPanel);
+
+        pack();
+    }
+
+    // Code for dispatching events from components to event handlers.
+
+    private class FormListener implements ActionListener, KeyListener {
+        FormListener() {}
+        public void actionPerformed(ActionEvent evt) {
+            if (evt.getSource() == launchJobButton) {
+                CrawlJob.this.launchJobButtonActionPerformed(evt);
+            }
+            else if (evt.getSource() == pauseButton) {
+                CrawlJob.this.pauseButtonActionPerformed(evt);
+            }
+            else if (evt.getSource() == killButton) {
+                CrawlJob.this.killButtonActionPerformed(evt);
+            }
+            else if (evt.getSource() == exitButton) {
+                CrawlJob.this.exitButtonActionPerformed(evt);
+            }
+            else if (evt.getSource() == resumeButton) {
+                CrawlJob.this.resumeButtonActionPerformed(evt);
+            }
+        }
+
+        public void keyPressed(KeyEvent evt) {
+        }
+
+        public void keyReleased(KeyEvent evt) {
+            if (evt.getSource() == depthTextField) {
+                CrawlJob.this.depthTextFieldKeyReleased(evt);
+            }
+        }
+
+        public void keyTyped(KeyEvent evt) {
+        }
+    }// </editor-fold>//GEN-END:initComponents
+
+  private void depthTextFieldKeyReleased (KeyEvent evt) {//GEN-FIRST:event_depthTextFieldKeyReleased
+      if (!NumberUtils.isDigits(CrawlJob.this.depthTextField.getText()) && CrawlJob.this.depthTextField.getText().length() > 0) {
+          // No agregar el caracter.
+          CrawlJob.this.depthTextField.setText(CrawlJob.this.depthTextField.getText().substring(0, CrawlJob.this.depthTextField.getText().length() - 1));
+
+          JOptionPane.showMessageDialog(
+                  CrawlJob.thisFrame,
+                  HtmlMessageBuilder.buildOnlyOneParagraphMsg(AIMEConstants.ONLY_NUMERIC_CHARS.getStringConstant()),
+                  "Warning",
+                  JOptionPane.WARNING_MESSAGE,
+                  LookFeel.getIcon("Alert.png"));
+      }
+  }//GEN-LAST:event_depthTextFieldKeyReleased
+
+  private void launchJobButtonActionPerformed (ActionEvent evt) {//GEN-FIRST:event_launchJobButtonActionPerformed
+      // Disable launch button.
+      CrawlJob.this.launchJobButton.setEnabled(false);
+
+      // Control that fields aren't empty.
+      if (CrawlJob.this.depthTextField.getText().equalsIgnoreCase("")) {
+          JOptionPane.showMessageDialog(
+                  CrawlJob.thisFrame,
+                  HtmlMessageBuilder.buildOnlyOneParagraphMsg(AIMEConstants.EMPTY_DEPTH_FIELD.getStringConstant()),
+                  "Warning",
+                  JOptionPane.WARNING_MESSAGE,
+                  LookFeel.getIcon("Alert.png"));
+
+          CrawlJob.this.depthTextField.requestFocus();
+          CrawlJob.this.launchJobButton.setEnabled(true); // Enable launch button again.
+          return;
+      }
+
+      // Check if there are previous jobs and we are not on resume mode.
+      if (!CrawlJob.this.isResumeGlobal && CrawlJob.this.model.jobExists(
+              (Integer) new CerebellumDHI().obtainLocalData(
+              CerebellumDHI.AIME_METADATA,
+              CerebellumDHI.AIME_EXECUTION_TYPE_DATA).get())) {
+          JOptionPane.showMessageDialog(
+                  CrawlJob.thisFrame,
+                  HtmlMessageBuilder.buildOnlyOneParagraphMsg(AIMEConstants.PREVIOUS_JOBS.getStringConstant()),
+                  "Warning",
+                  JOptionPane.WARNING_MESSAGE,
+                  LookFeel.getIcon("Alert.png"));
+
+          CrawlJob.this.launchJobButton.setEnabled(true); // Enable launch button again.
+          return;
+      }
+
+      CrawlJob.this.jobLauncher = new Thread("AIME#CrawlJobLauncher") {
+          @Override
+          public void run() {
+              CrawlJob.this.utilities.startTimeLabelUpdater();
+
+              // Start the crawling job.
+              CrawlJob.this.model.runJob(CrawlJob.this.depthTextField.getText(), CrawlJob.this.sendReportsCheckBox.isSelected(), CrawlJob.this.jobLauncher);
+
+              // Stop the counter.
+              CrawlJob.this.utilities.stopTimeLabelUpdater();
+
+              // Present the use with a message stating the job was done, only if the job wasn't cancelled nor interrupted
+              // by any anomaly.
+              if (!CrawlJob.this.model.hasBeenStopped() && !this.isInterrupted()) {
+                  JOptionPane.showMessageDialog(
+                          CrawlJob.thisFrame,
+                          HtmlMessageBuilder.buildOnlyOneParagraphMsg(AIMEConstants.JOB_FINISH.getStringConstant()),
+                          "Information",
+                          JOptionPane.INFORMATION_MESSAGE,
+                          LookFeel.getIcon("Info.png"));
+              }
+          }
+      };
+      // Launch the Job.
+      CrawlJob.this.jobLauncher.start();
+  }//GEN-LAST:event_launchJobButtonActionPerformed
+
+  private void killButtonActionPerformed (ActionEvent evt) {//GEN-FIRST:event_killButtonActionPerformed
+      // Logic:
+      // 1. Check if the job was started.
+      if (!CrawlJob.this.model.hasBeenStarted()) {
+          JOptionPane.showMessageDialog(
+                  CrawlJob.thisFrame,
+                  HtmlMessageBuilder.buildOnlyOneParagraphMsg(AIMEConstants.UNSTARTED_JOB.getStringConstant()),
+                  "Warning",
+                  JOptionPane.WARNING_MESSAGE,
+                  LookFeel.getIcon("Alert.png"));
+          return;
+      }
+
+      // 2. If the job is running, then issue a warning, and ask the user.
+      if (CrawlJob.this.model.isRunning()) {
+          int option = JOptionPane.showConfirmDialog(
+                  CrawlJob.thisFrame,
+                  HtmlMessageBuilder.buildOnlyOneParagraphMsg(AIMEConstants.INCONSISTENT_FILES.getStringConstant()),
+                  "Warning",
+                  JOptionPane.YES_NO_OPTION,
+                  JOptionPane.WARNING_MESSAGE,
+                  LookFeel.getIcon("Alert.png"));
+
+          // 3. If the option was YES, then issue the stop, and stop all Updaters.
+          if (option == JOptionPane.YES_OPTION) {
+              CrawlJob.this.model.stopJob(CrawlJob.this.jobLauncher);
+              // Stop Updaters.
+              CrawlJob.this.utilities.stopTimeLabelUpdater();
+              CrawlJob.this.utilities.stopRunningFunctionLabelUpdater();
+              CrawlJob.this.utilities.stopCurrentDepthLabelUpdater();
+          }
+      }
+      // 3. If there are no jobs running issue an alert.
+      else {
+          JOptionPane.showMessageDialog(
+                  CrawlJob.thisFrame,
+                  HtmlMessageBuilder.buildOnlyOneParagraphMsg(AIMEConstants.NO_RUNNING_JOBS.getStringConstant()),
+                  "Warning",
+                  JOptionPane.WARNING_MESSAGE,
+                  LookFeel.getIcon("Alert.png"));
+      }
+  }//GEN-LAST:event_killButtonActionPerformed
+
+  private void exitButtonActionPerformed (ActionEvent evt) {//GEN-FIRST:event_exitButtonActionPerformed
+      // Logic:
+      // 1. First check if there are no paused jobs pending.
+      if (CrawlJob.this.model.hasBeenPaused()) {
+          JOptionPane.showMessageDialog(
+                  CrawlJob.thisFrame,
+                  HtmlMessageBuilder.buildOnlyOneParagraphMsg(AIMEConstants.JOB_PAUSED_EXIT.getStringConstant()),
+                  "Warning",
+                  JOptionPane.WARNING_MESSAGE,
+                  LookFeel.getIcon("Alert.png"));
+          return;
+      }
+
+      // 2. If there are no paused jobs, then check if there are running jobs.
+      if (CrawlJob.this.model.isRunning()) {
+          JOptionPane.showMessageDialog(
+                  CrawlJob.thisFrame,
+                  HtmlMessageBuilder.buildOnlyOneParagraphMsg(AIMEConstants.JOB_RUNNING_EXIT.getStringConstant()),
+                  "Warning",
+                  JOptionPane.WARNING_MESSAGE,
+                  LookFeel.getIcon("Alert.png"));
+          return;
+      }
+
+      // 3. If everything is ok, then stop all updaters and quit.
+      if (LOG.isInfoEnabled()) {
+          LOG.info("Stopping updater threads.");
+      }
+
+      // Stop Updaters.
+      CrawlJob.this.utilities.stopTimeLabelUpdater();
+      CrawlJob.this.utilities.stopRunningFunctionLabelUpdater();
+      CrawlJob.this.utilities.stopCurrentDepthLabelUpdater();
+
+      // Dispose the window.
+      CrawlJob.this.dispose();
+  }//GEN-LAST:event_exitButtonActionPerformed
+
+  private void pauseButtonActionPerformed(ActionEvent evt) {//GEN-FIRST:event_pauseButtonActionPerformed
+      // Logic:
+      // 1. Check if the job was started.
+      if (!CrawlJob.this.model.hasBeenStarted()) {
+          JOptionPane.showMessageDialog(
+                  CrawlJob.thisFrame,
+                  HtmlMessageBuilder.buildOnlyOneParagraphMsg(AIMEConstants.UNSTARTED_JOB.getStringConstant()),
+                  "Warning",
+                  JOptionPane.WARNING_MESSAGE,
+                  LookFeel.getIcon("Alert.png"));
+          return;
+      }
+
+      // 2. If the job was stopped, then issue an alert.
+      if (CrawlJob.this.model.hasBeenStopped()) {
+          JOptionPane.showMessageDialog(
+                  CrawlJob.thisFrame,
+                  HtmlMessageBuilder.buildOnlyOneParagraphMsg(AIMEConstants.STOPPED_JOB.getStringConstant()),
+                  "Warning",
+                  JOptionPane.WARNING_MESSAGE,
+                  LookFeel.getIcon("Alert.png"));
+          return;
+      }
+
+      // 3. If the job is not running, issue an alert.
+      if (!CrawlJob.this.model.isRunning()) {
+          JOptionPane.showMessageDialog(
+                  CrawlJob.thisFrame,
+                  HtmlMessageBuilder.buildOnlyOneParagraphMsg(AIMEConstants.NO_RUNNING_JOBS.getStringConstant()),
+                  "Warning",
+                  JOptionPane.WARNING_MESSAGE,
+                  LookFeel.getIcon("Alert.png"));
+          return;
+      }
+
+      // 4. If all passed, then pause the job, and stop the timer updater.
+      CrawlJob.this.model.pauseJob(jobLauncher);
+      CrawlJob.this.utilities.stopTimeLabelUpdater();
+      JOptionPane.showMessageDialog(
+              CrawlJob.thisFrame,
+              HtmlMessageBuilder.buildOnlyOneParagraphMsg(AIMEConstants.JOB_PAUSED.getStringConstant()),
+              "Info",
+              JOptionPane.INFORMATION_MESSAGE,
+              LookFeel.getIcon("Info.png"));
+  }//GEN-LAST:event_pauseButtonActionPerformed
+
+  private void resumeButtonActionPerformed(ActionEvent evt) {//GEN-FIRST:event_resumeButtonActionPerformed
+      // Logic:
+      // 1. Check if the job was started.
+      if (!CrawlJob.this.model.hasBeenStarted()) {
+          JOptionPane.showMessageDialog(
+                  CrawlJob.thisFrame,
+                  HtmlMessageBuilder.buildOnlyOneParagraphMsg(AIMEConstants.UNSTARTED_JOB.getStringConstant()),
+                  "Warning",
+                  JOptionPane.WARNING_MESSAGE,
+                  LookFeel.getIcon("Alert.png"));
+          return;
+      }
+
+      // 2. If the job was stopped, then issue an alert.
+      if (CrawlJob.this.model.hasBeenStopped()) {
+          JOptionPane.showMessageDialog(
+                  CrawlJob.thisFrame,
+                  HtmlMessageBuilder.buildOnlyOneParagraphMsg(AIMEConstants.STOPPED_JOB.getStringConstant()),
+                  "Warning",
+                  JOptionPane.WARNING_MESSAGE,
+                  LookFeel.getIcon("Alert.png"));
+          return;
+      }
+
+      // 3. If the job is already running, then issue a warning.
+      if (CrawlJob.this.model.isRunning()) {
+          JOptionPane.showMessageDialog(
+                  CrawlJob.thisFrame,
+                  HtmlMessageBuilder.buildOnlyOneParagraphMsg(AIMEConstants.JOB_IS_RUNNING.getStringConstant()),
+                  "Warning",
+                  JOptionPane.WARNING_MESSAGE,
+                  LookFeel.getIcon("Alert.png"));
+          return;
+      }
+
+      // 4. If all passed, then resume the job and start the updaters.
+      CrawlJob.this.model.resumeJob();
+      CrawlJob.this.utilities.startTimeLabelUpdater();
+      JOptionPane.showMessageDialog(
+              CrawlJob.thisFrame,
+              HtmlMessageBuilder.buildOnlyOneParagraphMsg(AIMEConstants.JOB_RESUMED.getStringConstant()),
+              "Info",
+              JOptionPane.INFORMATION_MESSAGE,
+              LookFeel.getIcon("Info.png"));
+  }//GEN-LAST:event_resumeButtonActionPerformed
+    // Variables declaration - do not modify//GEN-BEGIN:variables
+    private JPanel buttonsPanel;
+    private JPanel containerPanel;
+    private JCheckBox crawlOption1CheckBox;
+    private JLabel currentDepthInfoLabel;
+    private JLabel currentDepthLabel;
+    private JLabel depthLabel;
+    private JTextField depthTextField;
+    private JPanel executionTimePanel;
+    private JButton exitButton;
+    private JPanel indicatorsPanel;
+    private JButton killButton;
+    private JButton launchJobButton;
+    private JPanel mainPanel;
+    private JPanel optionsPanel;
+    private JButton pauseButton;
+    private JButton resumeButton;
+    private JLabel runningFunctionInfoLabel;
+    private JLabel runningFunctionLabel;
+    private JCheckBox sendReportsCheckBox;
+    private JLabel sendReportsLabel;
+    private JSeparator sep1;
+    private JLabel timeLabel;
+    // End of variables declaration//GEN-END:variables
+}

@@ -1,0 +1,78 @@
+package io.aime;
+
+// AWT
+import java.awt.EventQueue;
+
+// Swing
+import javax.swing.GroupLayout;
+import javax.swing.GroupLayout.Alignment;
+import javax.swing.JFrame;
+import javax.swing.WindowConstants;
+
+public class URLInjector extends JFrame {
+
+  private static JFrame thisFrame = null;
+  private Initiator initiator = new Initiator ();
+  private Utilities utilities;
+
+  private URLInjector () {
+    this.initiator.initHandlers ();
+    this.initiator.init ();
+  }
+
+  private class Initiator {
+
+    void initHandlers () {
+      URLInjector.this.utilities = new Utilities ();
+    }
+
+    void init () {
+      URLInjector.this.initComponents ();
+    }
+  }
+
+  private class Utilities {
+  }
+
+  public static void build () {
+    if (URLInjector.thisFrame != null) {
+      if (!URLInjector.thisFrame.isVisible ()) {
+        URLInjector.thisFrame.setVisible (true);
+      }
+      else {
+        URLInjector.thisFrame.toFront (); // Bring opened one to front.
+      }
+    }
+    else { // Create a new window.
+      EventQueue.invokeLater (new Runnable () {
+        @Override
+        public void run () {
+          URLInjector.thisFrame = new URLInjector ();
+          URLInjector.thisFrame.setLocationRelativeTo (Main.thisFrame);
+          URLInjector.thisFrame.setVisible (true);
+        }
+      });
+    }
+  }
+
+  // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
+  private void initComponents() {
+
+    setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+
+    GroupLayout layout = new GroupLayout(getContentPane());
+    getContentPane().setLayout(layout);
+    layout.setHorizontalGroup(
+      layout.createParallelGroup(Alignment.LEADING)
+      .addGap(0, 400, Short.MAX_VALUE)
+    );
+    layout.setVerticalGroup(
+      layout.createParallelGroup(Alignment.LEADING)
+      .addGap(0, 300, Short.MAX_VALUE)
+    );
+
+    pack();
+  }// </editor-fold>//GEN-END:initComponents
+  // Variables declaration - do not modify//GEN-BEGIN:variables
+  // End of variables declaration//GEN-END:variables
+}

@@ -1,0 +1,74 @@
+package io.aime;
+
+// AIME
+import io.aime.mvc.controller.CerebellumController;
+import io.aime.mvc.model.CerebellumGeneralTableModel;
+import io.aime.mvc.model.CerebellumLocalObtainedTableModel;
+import io.aime.mvc.model.CerebellumRemoteReceivedTableModel;
+import io.aime.mvc.view.CerebellumViewPanel;
+
+// AWT
+import java.awt.Dimension;
+import java.awt.EventQueue;
+
+// Util
+import java.util.ResourceBundle;
+
+// Swing
+import javax.swing.BoxLayout;
+import javax.swing.JFrame;
+import javax.swing.WindowConstants;
+
+public class Cerebellum extends JFrame {
+
+    private static Cerebellum _INSTANCE;
+
+    private Cerebellum() {
+        initComponents();
+    }
+
+    public static void build() {
+        if (_INSTANCE != null) {
+            if (!_INSTANCE.isVisible()) {
+                _INSTANCE.setVisible(true);
+            }
+            else {
+                _INSTANCE.toFront(); // Bring opened one to front.
+            }
+        }
+        else { // Create a new window.
+            EventQueue.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    CerebellumController controller = new CerebellumController();
+                    controller.addTableModel(new CerebellumGeneralTableModel());
+                    controller.addTableModel(new CerebellumLocalObtainedTableModel());
+                    controller.addTableModel(new CerebellumRemoteReceivedTableModel());
+
+                    CerebellumViewPanel view = new CerebellumViewPanel(controller);
+                    controller.addView(view);
+
+                    _INSTANCE = new Cerebellum();
+                    _INSTANCE.add(view);
+                    _INSTANCE.setLocationRelativeTo(Main.getInstance());
+                    _INSTANCE.setVisible(true);
+                }
+            });
+        }
+    }
+
+    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
+    private void initComponents() {
+
+        setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+        ResourceBundle bundle = ResourceBundle.getBundle("io/aime/Bundle"); // NOI18N
+        setTitle(bundle.getString("Cerebellum.title")); // NOI18N
+        setName("Form"); // NOI18N
+        setPreferredSize(new Dimension(280, 320));
+        getContentPane().setLayout(new BoxLayout(getContentPane(), BoxLayout.LINE_AXIS));
+
+        pack();
+    }// </editor-fold>//GEN-END:initComponents
+    // Variables declaration - do not modify//GEN-BEGIN:variables
+    // End of variables declaration//GEN-END:variables
+}

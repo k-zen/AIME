@@ -1,0 +1,96 @@
+package io.aime.graphs;
+
+// AIME
+import io.aime.kernel.Kernel;
+import io.aime.util.AIMEConfiguration;
+import io.aime.util.LookFeel;
+
+// Apache Hadoop
+import org.apache.hadoop.conf.Configuration;
+
+// AWT
+import java.awt.BasicStroke;
+import java.awt.BorderLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+
+// JFreeChart
+import org.jfree.chart.ChartPanel;
+import org.jfree.chart.JFreeChart;
+import org.jfree.chart.axis.DateAxis;
+import org.jfree.chart.axis.DateTickUnit;
+import org.jfree.chart.axis.DateTickUnitType;
+import org.jfree.chart.axis.NumberAxis;
+import org.jfree.chart.plot.XYPlot;
+import org.jfree.chart.renderer.xy.XYAreaRenderer;
+import org.jfree.data.time.Second;
+import org.jfree.data.time.TimeTableXYDataset;
+
+// Swing
+import javax.swing.JPanel;
+import javax.swing.Timer;
+
+public class IndexServerRequests extends JPanel {
+
+    private TimeTableXYDataset dataset = new TimeTableXYDataset();
+    private Configuration conf = new AIMEConfiguration().create();
+
+    public IndexServerRequests() {
+        super(new BorderLayout());
+
+        final DateAxis domain = new DateAxis("Time");
+        domain.setVisible(false);
+        domain.setLabelFont(LookFeel.getFont(true, 0));
+        domain.setLabelPaint(LookFeel.getForegroundColor());
+        domain.setAutoRange(true);
+        domain.setLowerMargin(0.0);
+        domain.setUpperMargin(0.0);
+        domain.setTickLabelsVisible(false);
+        domain.setFixedAutoRange(240000.0d);
+        domain.setTickUnit(new DateTickUnit(DateTickUnitType.SECOND, 10));
+        domain.setTickLabelFont(LookFeel.getFont(true, -1));
+        domain.setTickLabelPaint(LookFeel.getForegroundColor());
+
+        final NumberAxis range = new NumberAxis("Conn. Time");
+        range.setLabelFont(LookFeel.getFont(true, 0));
+        range.setLabelPaint(LookFeel.getForegroundColor());
+        range.setAutoRange(true);
+        range.setStandardTickUnits(NumberAxis.createIntegerTickUnits());
+        range.setTickLabelFont(LookFeel.getFont(true, -1));
+        range.setTickLabelPaint(LookFeel.getForegroundColor());
+
+        final XYAreaRenderer renderer = new XYAreaRenderer();
+        renderer.setSeriesPaint(0, LookFeel.getPrimaryControlColor());
+        renderer.setSeriesStroke(0, new BasicStroke(1.0f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+        renderer.setBaseItemLabelFont(LookFeel.getFont(true, 0));
+        renderer.setBaseLegendTextFont(LookFeel.getFont(true, 0));
+
+        final XYPlot xyplot = new XYPlot(dataset, domain, range, renderer);
+        xyplot.setBackgroundPaint(LookFeel.getGraphsColor());
+        // xyplot.setDomainGridlinePaint(LookFeel.getDefaultGraphGridColor());
+        // xyplot.setRangeGridlinePaint(LookFeel.getDefaultGraphGridColor());
+        xyplot.setDomainCrosshairVisible(true);
+        xyplot.setRangeCrosshairVisible(true);
+
+        final JFreeChart chart = new JFreeChart(null, null, xyplot, false);
+        final ChartPanel chartPanel = new ChartPanel(chart);
+        chartPanel.setPopupMenu(null);
+        super.add(chartPanel);
+
+        // Lanzar el hilo de coleccion.
+        new Updater().start();
+    }
+
+    class Updater extends Timer implements ActionListener {
+
+        Updater() {
+            super(conf.getInt("indexserver.requests.graph", 1000), null);
+            super.addActionListener(this);
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent event) {
+            dataset.add(new Second(), Double.valueOf(Kernel.INDEX_SERVER_FACTORY.getInstanceConnectionTime()), "Avg. Connect Time");
+        }
+    }
+}

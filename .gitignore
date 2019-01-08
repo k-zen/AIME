@@ -1,0 +1,32 @@
+# ======================= #
+# Author: Andreas Koenzen #
+# Date: 2018.12.20        #
+# ======================= #
+# ====== Compiled Source
+*.com
+*.class
+*.dll
+*.exe
+*.o
+*.so
+*.pyc
+# ====== Packages
+*.7z
+*.dmg
+*.gz
+*.iso
+*.rar
+*.tar
+*.zip
+# ====== Logs and Databases
+*.log
+*.sqlite
+# ====== OS Generated Files
+.DS_Store
+# ====== IDE Specific
+.idea
+*.sublime-project
+*.sublime-workspace
+# ====== Python & Jupyter Notebooks
+venv*
+.ipynb_checkpoints

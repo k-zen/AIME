@@ -1,0 +1,133 @@
+package io.aime;
+
+// AIME
+import io.aime.mvc.controller.AbstractController;
+import io.aime.mvc.controller.FilterRuleController;
+import io.aime.mvc.model.AbstractModel;
+import io.aime.mvc.model.FilterRuleModel;
+import io.aime.mvc.model.FilterSiteRuleTableModel;
+import io.aime.mvc.model.FilterURLRuleTableModel;
+import io.aime.mvc.view.AbstractViewPanel;
+import io.aime.mvc.view.FilterRuleViewPanel;
+
+// AWT
+import java.awt.Dimension;
+import java.awt.EventQueue;
+
+// Swing
+import javax.swing.BoxLayout;
+import javax.swing.WindowConstants;
+
+/**
+ * Frame for the Filters.
+ *
+ * @author K-Zen
+ * @see Singleton Pattern
+ */
+public final class FiltersWindow extends AbstractFrame {
+
+    private static final FiltersWindow _INSTANCE = new FiltersWindow();
+    private boolean ready = false;
+    private FilterRuleController controller;
+    private FilterRuleModel model;
+    private FilterRuleViewPanel view;
+
+    public static FiltersWindow getInstance() {
+        return _INSTANCE;
+    }
+
+    private FiltersWindow() {
+    }
+
+    @Override
+    protected AbstractFrame createGUI() {
+        initComponents();
+        // CONTROLLERS
+        controller = new FilterRuleController();
+        // MODELS
+        model = new FilterRuleModel();
+        // CONFIGURE MODELS
+        controller.addModel(model);
+        controller.addTableModel(new FilterURLRuleTableModel());
+        controller.addTableModel(new FilterSiteRuleTableModel());
+        // VIEWS
+        view = new FilterRuleViewPanel(controller);
+        // CONFIGURE VIEWS
+        controller.addView(view);
+        // ADD VIEWS TO THIS PANEL.
+        add(view);
+        // Paint panel.
+        setLocationRelativeTo(MainWindow.getInstance());
+        setVisible(true);
+
+        ready = true;
+
+        return this;
+    }
+
+    @Override
+    protected AbstractFrame configure() {
+        return this;
+    }
+
+    @Override
+    public AbstractFrame makeVisible() {
+        if (ready) {
+            if (!isVisible()) {
+                setVisible(true);
+            }
+            else {
+                toFront();
+            }
+        }
+        else {
+            EventQueue.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    createGUI().configure();
+                }
+            });
+        }
+
+        return this;
+    }
+
+    @Override
+    protected AbstractController getController(byte id) {
+        switch (id) {
+            default:
+                return controller;
+        }
+    }
+
+    @Override
+    protected AbstractModel getModel(byte id) {
+        switch (id) {
+            default:
+                return model;
+        }
+    }
+
+    @Override
+    protected AbstractViewPanel getView(byte id) {
+        switch (id) {
+            default:
+                return view;
+        }
+    }
+
+    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
+    private void initComponents() {
+
+        setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+        setTitle("Filters Management");
+        setMinimumSize(new Dimension(350, 400));
+        setName("Form"); // NOI18N
+        setPreferredSize(new Dimension(350, 400));
+        getContentPane().setLayout(new BoxLayout(getContentPane(), BoxLayout.LINE_AXIS));
+
+        pack();
+    }// </editor-fold>//GEN-END:initComponents
+    // Variables declaration - do not modify//GEN-BEGIN:variables
+    // End of variables declaration//GEN-END:variables
+}

@@ -1,0 +1,351 @@
+package io.aime;
+
+// AIME
+import io.aime.crawl.CrawlDBReader;
+import io.aime.util.AIMEConfiguration;
+import io.aime.util.AIMEConstants;
+import io.aime.util.LookFeel;
+
+// Apache Hadoop
+import org.apache.hadoop.io.Text;
+
+// AWT
+import java.awt.BorderLayout;
+import java.awt.Cursor;
+import java.awt.Desktop;
+import java.awt.Dimension;
+import java.awt.EventQueue;
+import java.awt.Font;
+import java.awt.GridLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+
+// IO
+import java.io.IOException;
+
+// Util
+import java.util.ResourceBundle;
+
+// Log4j
+import org.apache.log4j.Logger;
+
+// Swing
+import javax.swing.BorderFactory;
+import javax.swing.BoxLayout;
+import javax.swing.DefaultComboBoxModel;
+import javax.swing.JButton;
+import javax.swing.JComboBox;
+import javax.swing.JEditorPane;
+import javax.swing.JFrame;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JProgressBar;
+import javax.swing.JScrollPane;
+import javax.swing.SwingUtilities;
+import javax.swing.WindowConstants;
+import javax.swing.border.TitledBorder;
+import javax.swing.event.HyperlinkEvent;
+import javax.swing.event.HyperlinkListener;
+
+public class ReadMainDBase extends JFrame {
+
+  private final static Logger LOG = Logger.getLogger (ReadMainDBase.class.getName ());
+  private static JFrame thisFrame;
+  private Initiator i = new Initiator ();
+  private Utilities u;
+
+  private ReadMainDBase () {
+    this.i.initHandlers ();
+    this.i.init ();
+  }
+
+  private class Initiator {
+
+    void initHandlers () {
+      ReadMainDBase.this.u = new Utilities ();
+    }
+
+    void init () {
+      ReadMainDBase.this.initComponents ();
+    }
+  }
+
+  private class Utilities {
+
+    Text processStatJobUnsort () {
+      try {
+        return new CrawlDBReader ().processStatJob (
+                AIMEConstants.DEFAULT_JOB_NAME.getStringConstant () + "/" + AIMEConstants.AIME_CRAWLDB_DIR_NAME.getStringConstant (),
+                new AIMEConfiguration ().create (),
+                false);
+      }
+      catch (IOException ex) {
+        LOG.fatal ("Impossible to launch job Main DBase statistics. Error: " + ex.toString (), ex);
+      }
+
+      return new Text ();
+    }
+
+    Text processStatJobSort () {
+      try {
+        return new CrawlDBReader ().processStatJob (
+                AIMEConstants.DEFAULT_JOB_NAME.getStringConstant () + "/" + AIMEConstants.AIME_CRAWLDB_DIR_NAME.getStringConstant (),
+                new AIMEConfiguration ().create (),
+                true);
+      }
+      catch (IOException ex) {
+        LOG.fatal ("Impossible to launch job Main DBase statistics. Error: " + ex.toString (), ex);
+      }
+
+      return new Text ();
+    }
+
+    Text getURLInfo (String url) {
+      try {
+        return new CrawlDBReader ().readUrl (
+                AIMEConstants.DEFAULT_JOB_NAME.getStringConstant () + "/" + AIMEConstants.AIME_CRAWLDB_DIR_NAME.getStringConstant (),
+                url,
+                new AIMEConfiguration ().create ());
+      }
+      catch (IOException ex) {
+        LOG.fatal ("Impossible to launch job Main DBase statistics. Error: " + ex.toString (), ex);
+      }
+
+      return new Text ();
+    }
+
+    Text processTopNURL (long topN, float min) {
+      try {
+        return new CrawlDBReader ().processTopNJob (
+                AIMEConstants.DEFAULT_JOB_NAME.getStringConstant () + "/" + AIMEConstants.AIME_CRAWLDB_DIR_NAME.getStringConstant (),
+                topN,
+                min,
+                new AIMEConfiguration ().create ());
+      }
+      catch (IOException ex) {
+        LOG.fatal ("Impossible to launch job Main DBase statistics. Error: " + ex.toString (), ex);
+      }
+
+      return new Text ();
+    }
+  }
+
+  public static void build () {
+    if (ReadMainDBase.thisFrame != null) {
+      if (!ReadMainDBase.thisFrame.isVisible ()) {
+        ReadMainDBase.thisFrame.setVisible (true);
+      }
+      else {
+        ReadMainDBase.thisFrame.toFront (); // Bring opened one to front.
+      }
+    }
+    else { // Create a new window.
+      EventQueue.invokeLater (new Runnable () {
+        @Override
+        public void run () {
+          ReadMainDBase.thisFrame = new ReadMainDBase ();
+          ReadMainDBase.thisFrame.setLocationRelativeTo (Main.thisFrame);
+          ReadMainDBase.thisFrame.setVisible (true);
+        }
+      });
+    }
+  }
+
+  private void initComponents() {//GEN-BEGIN:initComponents
+
+    containerPanel = new JPanel();
+    toolsPanel = new JPanel();
+    optionsPanel = new JPanel();
+    functionsComboBox = new JComboBox();
+    launchButton = new JButton();
+    progressPanel = new JPanel();
+    searchProgressBar = new JProgressBar();
+    resultsPanel = new JPanel();
+    resultsScrollPane = new JScrollPane();
+    resultsEditorPane = new JEditorPane();
+    FormListener formListener = new FormListener (); 
+
+    setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+    ResourceBundle bundle = ResourceBundle.getBundle ("io/aime/Bundle"); // NOI18N
+    setTitle(bundle.getString("ReadMainDBase.title")); // NOI18N
+    setName("Form"); // NOI18N
+    getContentPane().setLayout(new BoxLayout(getContentPane(), BoxLayout.LINE_AXIS));
+
+    containerPanel.setName("containerPanel"); // NOI18N
+    containerPanel.setPreferredSize(new Dimension(600, 300));
+    containerPanel.setLayout(new BorderLayout());
+
+    toolsPanel.setBorder(BorderFactory.createTitledBorder(LookFeel.getDefaultBorder (), bundle.getString("ReadMainDBase.toolsPanel.border.title"), TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION, LookFeel.getFont (true, 1))); // NOI18N
+    toolsPanel.setName("toolsPanel"); // NOI18N
+    toolsPanel.setLayout(new GridLayout(2, 1));
+
+    optionsPanel.setBorder(BorderFactory.createEmptyBorder(2, 2, 2, 2));
+    optionsPanel.setName("optionsPanel"); // NOI18N
+    optionsPanel.setLayout(new BorderLayout());
+
+    functionsComboBox.setFont(functionsComboBox.getFont().deriveFont(functionsComboBox.getFont().getStyle() | Font.BOLD, 10));
+    functionsComboBox.setModel(new DefaultComboBoxModel(new String[] { "Show Stats", "Show Stats Sorted", "Show Top Ranked URLs", "Get URL Information" }));
+    functionsComboBox.setName("functionsComboBox"); // NOI18N
+    optionsPanel.add(functionsComboBox, BorderLayout.CENTER);
+
+    launchButton.setFont(launchButton.getFont().deriveFont(launchButton.getFont().getStyle() | Font.BOLD, 10));
+    launchButton.setText(bundle.getString("ReadMainDBase.launchButton.text")); // NOI18N
+    launchButton.setName("launchButton"); // NOI18N
+    launchButton.addActionListener(formListener);
+    optionsPanel.add(launchButton, BorderLayout.EAST);
+
+    toolsPanel.add(optionsPanel);
+
+    progressPanel.setBorder(BorderFactory.createEmptyBorder(2, 2, 2, 2));
+    progressPanel.setName("progressPanel"); // NOI18N
+    progressPanel.setLayout(new BoxLayout(progressPanel, BoxLayout.LINE_AXIS));
+
+    searchProgressBar.setFont(searchProgressBar.getFont().deriveFont(searchProgressBar.getFont().getStyle() | Font.BOLD, 10));
+    searchProgressBar.setName("searchProgressBar"); // NOI18N
+    progressPanel.add(searchProgressBar);
+
+    toolsPanel.add(progressPanel);
+
+    containerPanel.add(toolsPanel, BorderLayout.NORTH);
+
+    resultsPanel.setBorder(BorderFactory.createTitledBorder(LookFeel.getDefaultBorder (), bundle.getString("ReadMainDBase.resultsPanel.border.title"), TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION, LookFeel.getFont (true, 1))); // NOI18N
+    resultsPanel.setName("resultsPanel"); // NOI18N
+    resultsPanel.setLayout(new BoxLayout(resultsPanel, BoxLayout.LINE_AXIS));
+
+    resultsScrollPane.setBorder(BorderFactory.createEmptyBorder(1, 1, 1, 1));
+    resultsScrollPane.setAutoscrolls(true);
+    resultsScrollPane.setName("resultsScrollPane"); // NOI18N
+
+    resultsEditorPane.setEditable(false);
+    resultsEditorPane.setContentType("text/html"); // NOI18N
+    resultsEditorPane.setName("resultsEditorPane"); // NOI18N
+    resultsEditorPane.setPreferredSize(new Dimension(500, 300));
+    resultsEditorPane.addHyperlinkListener(formListener);
+    resultsScrollPane.setViewportView(resultsEditorPane);
+
+    resultsPanel.add(resultsScrollPane);
+
+    containerPanel.add(resultsPanel, BorderLayout.CENTER);
+
+    getContentPane().add(containerPanel);
+
+    pack();
+  }
+
+  // Code for dispatching events from components to event handlers.
+
+  private class FormListener implements ActionListener, HyperlinkListener {
+    FormListener() {}
+    public void actionPerformed(ActionEvent evt) {
+      if (evt.getSource() == launchButton) {
+        ReadMainDBase.this.launchButtonActionPerformed(evt);
+      }
+    }
+
+    public void hyperlinkUpdate(HyperlinkEvent evt) {
+      if (evt.getSource() == resultsEditorPane) {
+        ReadMainDBase.this.resultsEditorPaneHyperlinkUpdate(evt);
+      }
+    }
+  }//GEN-END:initComponents
+
+  private void launchButtonActionPerformed (ActionEvent evt) {//GEN-FIRST:event_launchButtonActionPerformed
+    ReadMainDBase.this.searchProgressBar.setIndeterminate (true);
+    // Disable button and set new icon.
+    ReadMainDBase.this.launchButton.setEnabled (false);
+
+    Thread queryMainDBase = new Thread ("PerformQueryMainDBase") {
+      @Override
+      public void run () {
+        switch (ReadMainDBase.this.functionsComboBox.getSelectedIndex ()) {
+          case 0:
+            ReadMainDBase.this.resultsEditorPane.setText (ReadMainDBase.this.u.processStatJobUnsort ().toString ());
+            break;
+          case 1:
+            ReadMainDBase.this.resultsEditorPane.setText (ReadMainDBase.this.u.processStatJobSort ().toString ());
+            break;
+          case 2:
+            ReadMainDBase.this.resultsEditorPane.setText (ReadMainDBase.this.u.processTopNURL (1000, 0.0f).toString ());
+            break;
+          case 3:
+            ReadMainDBase.this.searchProgressBar.setIndeterminate (false);
+
+            String msg2 =
+                    "<html>"
+                    + "<body>"
+                    + "<p>"
+                    + "<b>Please enter the URL in the box bellow:</b>"
+                    + "<br/>"
+                    + "<b><u>Example:</u></b> http://www.example.com"
+                    + "</p>"
+                    + "</body>"
+                    + "</html>";
+            String userInput = JOptionPane.showInputDialog (ReadMainDBase.thisFrame, msg2, "Enter URL", JOptionPane.PLAIN_MESSAGE);
+
+            if (userInput == null || userInput.isEmpty ()) {
+              break;
+            }
+
+            ReadMainDBase.this.searchProgressBar.setIndeterminate (true);
+            ReadMainDBase.this.resultsEditorPane.setText (ReadMainDBase.this.u.getURLInfo (userInput).toString ());
+            break;
+        }
+
+        ReadMainDBase.this.searchProgressBar.setIndeterminate (false);
+        ReadMainDBase.this.launchButton.setEnabled (true); // Revert to old icon and enable button.
+        interrupt (); // Interrupt this thread since it only works once.
+      }
+    };
+
+    // Launch the query search of the index.
+    queryMainDBase.start ();
+  }//GEN-LAST:event_launchButtonActionPerformed
+
+  private void resultsEditorPaneHyperlinkUpdate (HyperlinkEvent evt) {//GEN-FIRST:event_resultsEditorPaneHyperlinkUpdate
+    final javax.swing.event.HyperlinkEvent event = evt;
+
+    if (event.getEventType () == HyperlinkEvent.EventType.ENTERED) {
+      EventQueue.invokeLater (new Runnable () {
+        @Override
+        public void run () {
+          SwingUtilities.getWindowAncestor (ReadMainDBase.this.resultsEditorPane).setCursor (Cursor.getPredefinedCursor (Cursor.HAND_CURSOR)); // Show hand cursor
+          ReadMainDBase.this.resultsEditorPane.setToolTipText (event.getURL ().toExternalForm ()); // Show URL as the tooltip
+        }
+      });
+    }
+    else if (event.getEventType () == HyperlinkEvent.EventType.EXITED) {
+      EventQueue.invokeLater (new Runnable () {
+        @Override
+        public void run () {
+          SwingUtilities.getWindowAncestor (ReadMainDBase.this.resultsEditorPane).setCursor (Cursor.getDefaultCursor ()); // Show default cursor
+          ReadMainDBase.this.resultsEditorPane.setToolTipText (null); // Reset tooltip
+        }
+      });
+    }
+    else if (event.getEventType () == HyperlinkEvent.EventType.ACTIVATED) {
+      if (Desktop.isDesktopSupported ()) {
+        try {
+          Desktop.getDesktop ().browse (event.getURL ().toURI ());
+        }
+        catch (Exception ex) {
+          LOG.error ("Generic error on link listener.", ex);
+        }
+      }
+      else {
+        LOG.error ("Hyperlinking not supported here.");
+      }
+    }
+  }//GEN-LAST:event_resultsEditorPaneHyperlinkUpdate
+  // Variables declaration - do not modify//GEN-BEGIN:variables
+  private JPanel containerPanel;
+  private JComboBox functionsComboBox;
+  private JButton launchButton;
+  private JPanel optionsPanel;
+  private JPanel progressPanel;
+  private JEditorPane resultsEditorPane;
+  private JPanel resultsPanel;
+  private JScrollPane resultsScrollPane;
+  private JProgressBar searchProgressBar;
+  private JPanel toolsPanel;
+  // End of variables declaration//GEN-END:variables
+}

@@ -1,0 +1,231 @@
+package io.aime;
+
+// AIME
+import io.aime.util.HtmlMessageBuilder;
+
+// AWT
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Desktop;
+import java.awt.Dimension;
+import java.awt.EventQueue;
+
+// Util
+import java.util.ResourceBundle;
+
+// Swing
+import javax.swing.BoxLayout;
+import javax.swing.ImageIcon;
+import javax.swing.JEditorPane;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.WindowConstants;
+import javax.swing.event.HyperlinkEvent;
+import javax.swing.event.HyperlinkListener;
+import javax.swing.text.DefaultCaret;
+
+public class About extends JFrame {
+
+    private static About _INSTANCE;
+    private Initiator initiator = new Initiator();
+    private Utilities utilities;
+
+    private About() {
+        this.initiator.initHandlers();
+        this.initiator.init();
+    }
+
+    private class Initiator {
+
+        void initHandlers() {
+            About.this.utilities = new Utilities();
+        }
+
+        void init() {
+            About.this.initComponents();
+        }
+    }
+
+    private class Utilities {
+
+        String getText() {
+            StringBuilder text = new StringBuilder();
+            text.append("<html>");
+            text.append("<head>");
+            text.append(HtmlMessageBuilder.alterCSSWhite());
+            text.append("</head>");
+            text.append("<body>");
+            text.append("<div id=\"container\">");
+            text.append("<table>");
+            text.append("<tr>");
+            text.append("<td>");
+            text.append("<p>");
+            text.append("<b>A.I.M.E.</b> stands for <u>Automated Indexer & (Data) Mining Engine</u>. This means that <b>A.I.M.E.</b> can crawl the Web and ");
+            text.append("index information she founds. <b>A.I.M.E.</b> was developed as a side/hobby project by computer programmer <b>Andreas Koenzen</b> ");
+            text.append("aproximately 3 years ago. She is now in her 0.2 version. <b>A.I.M.E.</b> was build using the Java programming language and it's ");
+            text.append("based on the Open Source search engine <a href=\"http://nutch.apache.org\">Nutch</a>, which has <a href=\"http://www.apache.org/licenses/LICENSE-2.0\">Apache Licence</a>. ");
+            text.append("The base code for this project was borrowed from this great software. <b>A.I.M.E.</b> is a search engine build entirely over the <a href=\"http://hadoop.apache.org\">Hadoop</a> ");
+            text.append("platform, so she has support for <a href=\"http://research.google.com/archive/mapreduce.html\">MapReduce</a> processing, supporting ");
+            text.append("distributed processing of gathered data/documents. This is very important, because this puts an upperbound on <b>A.I.M.E.</b> on ");
+            text.append("hardware instead of software. She can crawl and index the Web very fast and very easily using her ");
+            text.append("<a href=\"http://en.wikipedia.org/wiki/Graphical_user_interface\">Graphical User Interface (GUI)</a>. <b>A.I.M.E.</b> its not ");
+            text.append("only fast and efficient, but she is also polite when she crawls your Web page, you can instruct her on how would you like your ");
+            text.append("page to be crawled or if you don\'t want it to be crawled at all. For more info, keep reading ...");
+            text.append("</p>");
+            text.append("</td>");
+            text.append("</tr>");
+            text.append("<tr>");
+            text.append("<th>Technical description of <b>A.I.M.E.</b>:</th>");
+            text.append("</tr>");
+            text.append("<tr>");
+            text.append("<td>");
+            text.append("<h1>Support for distributed processing:</h1>");
+            text.append("<p>");
+            text.append("Through the Hadoop framework <b>A.I.M.E.</b> has support for MapReduce and distributed processing, ");
+            text.append("this is necessary given the current size of the Web, and also because it's a LOT faster!!!");
+            text.append("</p>");
+            text.append("<h1>Support for distributed indexing:</h1>");
+            text.append("<p>");
+            text.append("<b>A.I.M.E.</b> possesses her own indexing manager named the AIME's Kernel, which can support many ");
+            text.append("instances, each instance containing a small fraction of the total index. This makes <b>A.I.M.E.</b> fault-tolerant and fast for searching.");
+            text.append("</p>");
+            text.append("<h1>Support for incremental indexing:</h1>");
+            text.append("<p>");
+            text.append("<b>A.I.M.E.</b> uses an index in DFS (Distributed File System) for storing the buffer index, which will ");
+            text.append("provide the necessary data after each iteration of the crawling process to build the final index which will ");
+            text.append("be stored in the Kernel. This final index gets created only once during the first iteration and from there ");
+            text.append("documents/data gets added or updated. This brings support for incremental indexing capabilities.");
+            text.append("</p>");
+            text.append("<h1>Support for near real-time search:</h1>");
+            text.append("<p>");
+            text.append("<b>A.I.M.E.</b>'s Kernel can be queried anytime, she can search the kernel while it is being updated or a new document is being added to it.");
+            text.append("</p>");
+            text.append("<h1>Centralized Control Dashboard:</h1>");
+            text.append("<p>");
+            text.append("<b>A.I.M.E.</b> has a centralized dashboard that runs in the JobTracker and it\'s build using Java Swing. This dashboard ");
+            text.append("can provide accurate stats of the running processes. Like how many pages were fetched and how many where blocked by the ");
+            text.append("robots.txt directive, etc. For more information check out the screenshots below.");
+            text.append("</p>");
+            text.append("</td>");
+            text.append("</tr>");
+            text.append("</table>");
+            text.append("</div>");
+            text.append("</body>");
+            text.append("</html>");
+
+            return text.toString();
+        }
+    }
+
+    public static void build() {
+        if (About._INSTANCE != null) {
+            if (!About._INSTANCE.isVisible()) {
+                About._INSTANCE.setVisible(true);
+            }
+            else {
+                About._INSTANCE.toFront(); // Bring opened one to front.
+            }
+        }
+        else { // Create a new window.
+            EventQueue.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    About._INSTANCE = new About();
+                    About._INSTANCE.setLocationRelativeTo(Main.getInstance());
+                    About._INSTANCE.setVisible(true);
+                }
+            });
+        }
+    }
+
+    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
+    private void initComponents() {
+
+        containerPanel = new JPanel();
+        topPanel = new JPanel();
+        logoLabel = new JLabel();
+        centerPanel = new JPanel();
+        textScrollPane = new JScrollPane();
+        textEditorPane = new JEditorPane();
+
+        FormListener formListener = new FormListener();
+
+        setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+        ResourceBundle bundle = ResourceBundle.getBundle("io/aime/Bundle"); // NOI18N
+        setTitle(bundle.getString("About.title")); // NOI18N
+        setAlwaysOnTop(true);
+        setName("Form"); // NOI18N
+        setPreferredSize(new Dimension(400, 500));
+        setResizable(false);
+        getContentPane().setLayout(new BoxLayout(getContentPane(), BoxLayout.LINE_AXIS));
+
+        containerPanel.setName("containerPanel"); // NOI18N
+        containerPanel.setLayout(new BorderLayout());
+
+        topPanel.setBackground(new Color(204, 204, 204));
+        topPanel.setName("topPanel"); // NOI18N
+
+        logoLabel.setIcon(new ImageIcon(getClass().getResource("/resources/icons/logo/Logo.png"))); // NOI18N
+        logoLabel.setName("logoLabel"); // NOI18N
+        topPanel.add(logoLabel);
+
+        containerPanel.add(topPanel, BorderLayout.NORTH);
+
+        centerPanel.setName("centerPanel"); // NOI18N
+        centerPanel.setLayout(new BoxLayout(centerPanel, BoxLayout.LINE_AXIS));
+
+        textScrollPane.setBorder(null);
+        textScrollPane.setName("textScrollPane"); // NOI18N
+
+        // Always show the beginning of the text.
+        DefaultCaret caret = (DefaultCaret)textEditorPane.getCaret();
+        caret.setUpdatePolicy(DefaultCaret.NEVER_UPDATE);
+        textEditorPane.setEditable(false);
+        textEditorPane.setContentType("text/html"); // NOI18N
+        textEditorPane.setText(this.utilities.getText());
+        textEditorPane.setName("textEditorPane"); // NOI18N
+        textEditorPane.addHyperlinkListener(formListener);
+        textScrollPane.setViewportView(textEditorPane);
+
+        centerPanel.add(textScrollPane);
+
+        containerPanel.add(centerPanel, BorderLayout.CENTER);
+
+        getContentPane().add(containerPanel);
+
+        pack();
+    }
+
+    // Code for dispatching events from components to event handlers.
+
+    private class FormListener implements HyperlinkListener {
+        FormListener() {}
+        public void hyperlinkUpdate(HyperlinkEvent evt) {
+            if (evt.getSource() == textEditorPane) {
+                About.this.textEditorPaneHyperlinkUpdate(evt);
+            }
+        }
+    }// </editor-fold>//GEN-END:initComponents
+
+  private void textEditorPaneHyperlinkUpdate(HyperlinkEvent evt) {//GEN-FIRST:event_textEditorPaneHyperlinkUpdate
+      if (evt.getEventType() == HyperlinkEvent.EventType.ACTIVATED) {
+          if (Desktop.isDesktopSupported()) {
+              try {
+                  Desktop.getDesktop().browse(evt.getURL().toURI());
+              }
+              catch (Exception ex) {
+              }
+          }
+      }
+  }//GEN-LAST:event_textEditorPaneHyperlinkUpdate
+    // Variables declaration - do not modify//GEN-BEGIN:variables
+    private JPanel centerPanel;
+    private JPanel containerPanel;
+    private JLabel logoLabel;
+    JEditorPane textEditorPane;
+    private JScrollPane textScrollPane;
+    private JPanel topPanel;
+    // End of variables declaration//GEN-END:variables
+}

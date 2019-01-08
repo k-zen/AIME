@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<plugin id="index-basic">
+  <requires>
+    <import plugin="aime-extensionpoints"/>
+  </requires>
+  <extension id="BasicIndexingFilter" point="io.aime.indexer.IndexingFilter">
+    <implementation id="BasicIndexingFilter" class="io.aime.plugins.indexbasic.BasicIndexingFilter"/>
+  </extension>
+</plugin>

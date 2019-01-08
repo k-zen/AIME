@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<plugin id="language-identifier">
+    <requires>
+        <import plugin="aime-extensionpoints"/>
+    </requires>
+    <extension id="LanguageParser" point="io.aime.parse.HtmlParseFilter">
+        <implementation id="LanguageParser" class="io.aime.plugins.languageidentifier.HtmlLanguageParser"/>
+    </extension>
+    <extension id="LanguageIndexer" point="io.aime.indexer.IndexingFilter">
+        <implementation id="LanguageIndexer" class="io.aime.plugins.languageidentifier.LanguageIndexingFilter"/>
+    </extension>
+</plugin>

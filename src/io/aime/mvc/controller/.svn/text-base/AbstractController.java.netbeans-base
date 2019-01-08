@@ -1,0 +1,210 @@
+package io.aime.mvc.controller;
+
+import io.aime.mvc.model.AbstractModel;
+import io.aime.mvc.view.AbstractViewPanel;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.List;
+import javax.swing.table.AbstractTableModel;
+import javax.swing.text.Document;
+import javax.swing.tree.TreeModel;
+
+/**
+ * Skeleton class for all controllers.
+ *
+ * @author Andreas P. Koenzen <akc at apkc.net>
+ */
+public abstract class AbstractController implements PropertyChangeListener
+{
+
+    private List<AbstractViewPanel> registeredViews;
+    private List<AbstractModel> registeredModels;
+    private List<AbstractTableModel> registeredTableModels;
+    private List<Document> registeredDocumentModels;
+    private List<TreeModel> registeredTreeModels;
+
+    public AbstractController()
+    {
+        registeredViews = new ArrayList<>();
+        registeredModels = new ArrayList<>();
+        registeredTableModels = new ArrayList<>();
+        registeredDocumentModels = new ArrayList<>();
+        registeredTreeModels = new ArrayList<>();
+    }
+
+    /**
+     * Adds a new generic model.
+     *
+     * @param model A generic model object.
+     */
+    public void addModel(AbstractModel model)
+    {
+        registeredModels.add(model);
+        model.addPropertyChangeListener(this);
+    }
+
+    /**
+     * Adds a new table model.
+     *
+     * @param model A table model object.
+     */
+    public void addTableModel(AbstractTableModel model)
+    {
+        registeredTableModels.add(model);
+    }
+
+    /**
+     * Adds a new document model.
+     *
+     * @param model A document model object.
+     */
+    public void addDocumentModel(Document model)
+    {
+        registeredDocumentModels.add(model);
+    }
+
+    /**
+     * Removes a generic model.
+     *
+     * @param model A generic model object to remove.
+     */
+    public void removeModel(AbstractModel model)
+    {
+        registeredModels.remove(model);
+        model.removePropertyChangeListener(this);
+    }
+
+    /**
+     * Adds a new view to this controller.
+     *
+     * @param view The view object.
+     */
+    public void addView(AbstractViewPanel view)
+    {
+        registeredViews.add(view);
+    }
+
+    /**
+     * Removes a view from this controller.
+     *
+     * @param view The view object to remove.
+     */
+    public void removeView(AbstractViewPanel view)
+    {
+        registeredViews.remove(view);
+    }
+
+    @Override
+    public void propertyChange(PropertyChangeEvent evt)
+    {
+        for (AbstractViewPanel view : registeredViews)
+        {
+            view.modelPropertyChange(evt);
+        }
+    }
+
+    /**
+     * Sets a new property.
+     *
+     * @param propertyName The name of the property to change.
+     * @param newValue     The new value.
+     */
+    protected final void setModelProperty(String propertyName, Object newValue)
+    {
+        for (AbstractModel model : registeredModels)
+        {
+            try
+            {
+                Method method = model.getClass().getMethod("set" + propertyName, new Class[]
+                {
+                    newValue.getClass()
+                });
+                method.invoke(model, newValue);
+            }
+            catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e)
+            {
+            }
+        }
+    }
+
+    /**
+     * Gets a table model.
+     *
+     * @param clazz The class of the table model.
+     *
+     * @return A table model instance.
+     */
+    public final Object getTableModel(Class<? extends AbstractTableModel> clazz)
+    {
+        for (AbstractTableModel model : registeredTableModels)
+        {
+            try
+            {
+                if (model.getClass().equals(clazz))
+                {
+                    return model;
+                }
+            }
+            catch (Exception e)
+            {
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Gets a document model.
+     *
+     * @param clazz The class of the document model.
+     *
+     * @return A document model instance.
+     */
+    public Object getDocumentModel(Class<? extends Document> clazz)
+    {
+        for (Document model : registeredDocumentModels)
+        {
+            try
+            {
+                if (model.getClass().equals(clazz))
+                {
+                    return model;
+                }
+            }
+            catch (Exception e)
+            {
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Gets a tree model.
+     *
+     * @param clazz The class of the tree model.
+     *
+     * @return A tree model instance.
+     */
+    public Object getTreeModel(Class<? extends TreeModel> clazz)
+    {
+        for (TreeModel model : registeredTreeModels)
+        {
+            try
+            {
+                if (model.getClass().equals(clazz))
+                {
+                    return model;
+                }
+            }
+            catch (Exception e)
+            {
+            }
+        }
+
+        return null;
+    }
+}

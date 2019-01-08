@@ -1,0 +1,110 @@
+package io.aime.mvc.model;
+
+// AIME
+import io.aime.bot.ConsoleMessage;
+import io.aime.cerebellum.CerebellumDHI;
+import io.aime.util.AIMEConfiguration;
+
+// AWT
+import java.awt.Color;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+
+// Swing
+import javax.swing.Timer;
+import javax.swing.text.AttributeSet;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.DefaultStyledDocument;
+import javax.swing.text.SimpleAttributeSet;
+import javax.swing.text.StyleConstants;
+import javax.swing.text.StyleContext;
+
+public class AIMEBotConsoleModel extends DefaultStyledDocument {
+
+    private final String FONT = "Lucida Sans";
+    private final int FONT_SIZE = 12;
+    private final boolean italic = false;
+    private final String BASH = "#>";
+    private Timer timer = new Timer(
+            new AIMEConfiguration().create().getInt("aime.botconsole.table.model.refresh", 1000),
+            new DataListener());
+    private CerebellumDHI c = new CerebellumDHI();
+
+    public AIMEBotConsoleModel() {
+        super();
+        timer.start();
+    }
+
+    public void start() {
+        timer.start();
+    }
+
+    public void stop() {
+        timer.stop();
+    }
+
+    public void showAll() {
+        ConsoleMessage[] msgs = (ConsoleMessage[]) c.obtainLocalData(CerebellumDHI.BOT_CONSOLE, CerebellumDHI.BOT_CONSOLE_GET_ALL).get();
+        for (ConsoleMessage msg : msgs) {
+            insertMessage(msg);
+        }
+    }
+
+    void insertBash() {
+        StyleContext sc = StyleContext.getDefaultStyleContext();
+        AttributeSet aset = sc.addAttribute(SimpleAttributeSet.EMPTY, StyleConstants.FontFamily, FONT);
+        aset = sc.addAttribute(aset, StyleConstants.FontSize, FONT_SIZE);
+        aset = sc.addAttribute(aset, StyleConstants.Bold, true);
+        aset = sc.addAttribute(aset, StyleConstants.Alignment, StyleConstants.ALIGN_LEFT);
+        aset = sc.addAttribute(aset, StyleConstants.Foreground, Color.LIGHT_GRAY);
+        aset = sc.addAttribute(aset, StyleConstants.Background, Color.BLACK);
+
+        try {
+            insertString(getLength(), BASH, aset);
+        }
+        catch (BadLocationException e) {
+            // Do something
+        }
+    }
+
+    void insertMessage(ConsoleMessage data) {
+        if (!data.isEmpty()) {
+            try {
+                StyleContext sc = StyleContext.getDefaultStyleContext();
+                AttributeSet aset = sc.addAttribute(SimpleAttributeSet.EMPTY, StyleConstants.Foreground, Color.BLACK);
+                aset = sc.addAttribute(aset, StyleConstants.FontFamily, FONT);
+                aset = sc.addAttribute(aset, StyleConstants.FontSize, FONT_SIZE);
+                aset = sc.addAttribute(aset, StyleConstants.Bold, true);
+                if (italic) {
+                    aset = sc.addAttribute(aset, StyleConstants.Italic, true);
+                }
+                aset = sc.addAttribute(aset, StyleConstants.Alignment, StyleConstants.ALIGN_LEFT);
+                switch (data.getSeverity()) {
+                    case ConsoleMessage.INFO:
+                        aset = sc.addAttribute(aset, StyleConstants.Background, Color.GREEN);
+                        break;
+                    case ConsoleMessage.WARN:
+                        aset = sc.addAttribute(aset, StyleConstants.Background, Color.YELLOW);
+                        break;
+                    case ConsoleMessage.ERROR:
+                        aset = sc.addAttribute(aset, StyleConstants.Background, Color.RED);
+                        break;
+                }
+
+                insertBash();
+                insertString(getLength(), data.getMessage() + "\n", aset);
+            }
+            catch (BadLocationException e) {
+                // Do something
+            }
+        }
+    }
+
+    class DataListener implements ActionListener {
+
+        @Override
+        public void actionPerformed(ActionEvent evt) {
+            insertMessage((ConsoleMessage) c.obtainLocalData(CerebellumDHI.BOT_CONSOLE, CerebellumDHI.BOT_CONSOLE_MESSAGE).get());
+        }
+    }
+}
