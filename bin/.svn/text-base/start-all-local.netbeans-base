@@ -1,9 +1,0 @@
-#!/bin/bash
-bin=`dirname "$0"`
-bin=`cd "$bin"; pwd`
-# Start IndexServer.
-"$bin"/start-indexserver; sleep 2
-# Start SegmentServer.
-"$bin"/start-segmentserver; sleep 2
-# Start AIME.
-"$bin"/aime-local

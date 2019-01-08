@@ -1,81 +1,0 @@
-10
-
-dir
-1325
-svn+ssh://svn.apkc.net/srv/svn/AIME/trunk/files/aimefiles/aimeplugins/plugins
-svn+ssh://svn.apkc.net/srv/svn/AIME
-
-
-
-2014-09-16T16:05:18.054776Z
-1276
-akc
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-93d6f0f5-59b8-4517-9a3f-7fffe019592c
-
-aime-extensionpoints
-dir
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-svn+ssh://svn.apkc.net/srv/svn/AIME/trunk/files/aimefiles/aimeplugins/plugins/noemi-extensionpoints
-27
-
-index-basic
-dir
-
-index-more
-dir
-
-language-identifier
-dir
-
-parse-html
-dir
-
-parse-tika
-dir
-
-protocol-file
-dir
-
-protocol-httpclient
-dir
-
-protocol-smb
-dir
-
-urlfilter-regex
-dir
-
-urlnormalizer-basic
-dir
-

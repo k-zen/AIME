@@ -1,5 +1,0 @@
-#!/bin/sh
-echo "Removing .svn folders from: "
-pwd
-rm -rf `find . -type d -name .svn`
-echo "Finish"

@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<plugin id="index-more">
-    <requires>
-        <import plugin="aime-extensionpoints"/>
-    </requires>
-    <extension id="MoreIndexingFilter" point="io.aime.indexer.IndexingFilter">
-        <implementation id="MoreIndexingFilter" class="io.aime.plugins.indexmore.MoreIndexingFilter"/>
-    </extension>
-</plugin>

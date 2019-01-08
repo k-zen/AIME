@@ -1,7 +1,0 @@
-package io.aime.mvc.controller;
-
-import net.apkc.emma.mvc.AbstractController;
-
-public class MainDBaseController extends AbstractController
-{
-}

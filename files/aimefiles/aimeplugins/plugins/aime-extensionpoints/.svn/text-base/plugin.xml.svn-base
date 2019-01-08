@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<plugin id="aime-extensionpoints">
-    <extension-point id="io.aime.indexer.IndexingFilter"/>
-    <extension-point id="io.aime.parse.Parser"/>
-    <extension-point id="io.aime.parse.HtmlParseFilter"/>
-    <extension-point id="io.aime.protocol.Protocol"/>
-    <extension-point id="io.aime.net.URLFilter"/>
-    <extension-point id="io.aime.net.URLNormalizer"/>
-</plugin>

@@ -1,5 +1,0 @@
-#!/bin/sh
-echo "Removing OS X hidden files from: "
-pwd
-rm -rf `find . -name .DS_Store`
-echo "Finish"

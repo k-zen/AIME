@@ -1,4 +1,0 @@
-package io.aime.mvc.model;
-
-public class CerebellumModel extends AbstractModel {
-}

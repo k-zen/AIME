@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<plugin id="urlnormalizer-basic">
-  <requires>
-    <import plugin="aime-extensionpoints"/>
-  </requires>
-  <extension id="BasicURLNormalizer" point="io.aime.net.URLNormalizer">
-    <implementation id="BasicURLNormalizer" class="io.aime.plugins.urlnormalizerbasic.BasicURLNormalizer"/>
-  </extension>
-</plugin>

@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<plugin id="urlfilter-regex">
-    <requires>
-        <import plugin="aime-extensionpoints"/>
-    </requires>
-    <extension id="RegexURLFilter" point="io.aime.net.URLFilter">
-        <implementation id="RegexURLFilter" class="io.aime.plugins.urlfilterregex.RegexURLFilter"/>
-    </extension>
-</plugin>
