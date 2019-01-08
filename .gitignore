@@ -27,8 +27,11 @@
 *.svn
 # ====== IDE Specific
 .idea
+nbproject/
 *.sublime-project
 *.sublime-workspace
+# ====== Java Builds
+build/
 # ====== Python & Jupyter Notebooks
 venv*
 .ipynb_checkpoints
