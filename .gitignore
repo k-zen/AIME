@@ -23,6 +23,8 @@
 *.sqlite
 # ====== OS Generated Files
 .DS_Store
+# ====== Version Control
+*.svn
 # ====== IDE Specific
 .idea
 *.sublime-project
